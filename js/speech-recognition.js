@@ -68,6 +68,12 @@
             updateStatus('LIVE: Listening for speech...');
             updateSpeechButton('Stop Speech Recognition');
             
+            // Show mic indicator in AR
+            const micIndicator = document.getElementById('micIndicator');
+            if (micIndicator) {
+                micIndicator.setAttribute('visible', 'true');
+            }
+            
             // Show confirmation that live mode is active
             showLiveRecognitionActive();
         };
@@ -78,6 +84,12 @@
             isListening = false;
             updateStatus('Speech recognition stopped');
             updateSpeechButton('Start Speech Recognition');
+            
+            // Hide mic indicator in AR
+            const micIndicator = document.getElementById('micIndicator');
+            if (micIndicator) {
+                micIndicator.setAttribute('visible', 'false');
+            }
             
             // Clear captions after a delay
             setTimeout(() => {
@@ -122,6 +134,12 @@
             
             isListening = false;
             updateSpeechButton('Start Speech Recognition');
+            
+            // Hide mic indicator in AR
+            const micIndicator = document.getElementById('micIndicator');
+            if (micIndicator) {
+                micIndicator.setAttribute('visible', 'false');
+            }
         };
 
         // Recognition results
@@ -633,7 +651,7 @@
             
             // Reset dashboard to defaults
             const nameEl = document.getElementById('dashboardName');
-            if (nameEl) nameEl.setAttribute('value', 'Person's Name: ...');
+            if (nameEl) nameEl.setAttribute('value', "Person's Name: ...");
             
             const relationEl = document.getElementById('dashboardRelation');
             if (relationEl) relationEl.setAttribute('value', 'Relationship: Unknown');

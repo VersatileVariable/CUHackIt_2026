@@ -30,7 +30,6 @@
     <script src="js/quest-compatibility.js"></script>
     <script src="js/websocket-bridge.js"></script>
     <script src="js/speech-recognition.js"></script>
-    <script src="js/audio-direction.js"></script>
     <script src="js/ai-summarizer.js"></script>
     <script src="js/ar-manager.js"></script>
     
@@ -165,16 +164,16 @@
             cursor="rayOrigin: mouse; fuse: true; fuseTimeout: 1500"
             raycaster="objects: .clickable"
         >
-            <!-- VR Cursor Indicator -->
+            <!-- VR Cursor Indicator (Small Dot) -->
             <a-ring 
-                position="0 0 -0.5" 
-                radius-inner="0.01" 
-                radius-outer="0.015" 
+                position="0 0 -1.5" 
+                radius-inner="0.002" 
+                radius-outer="0.005" 
                 color="#10B981" 
-                opacity="0.8">
+                opacity="0.6">
             </a-ring>
             <!-- 1. LIVE CAPTION BAR (Lower Third) -->
-            <a-entity id="captionBar" position="0 -0.7 -1.5">
+            <a-entity id="captionBar" position="0 -0.7 -2.5">
                 <!-- Caption Background -->
                 <a-box 
                     id="captionBg"
@@ -206,51 +205,8 @@
                 </a-text>
             </a-entity>
 
-            <!-- 2. 360-DEGREE DIRECTIONAL SOUND INDICATORS -->
-            <!-- Sound Ring Container - Positioned around user -->
-            <a-entity id="soundRing" position="0 0 -1.5">
-                <!-- North (0°) -->
-                <a-box id="soundN" position="0 1.5 0" width="0.2" height="0.3" depth="0.02" 
-                       color="#00FFFF" opacity="0" material="transparent: true; emissive: #00FFFF; emissiveIntensity: 0"></a-box>
-                
-                <!-- Northeast (45°) -->
-                <a-box id="soundNE" position="1.06 1.06 0" width="0.15" height="0.25" depth="0.02" 
-                       color="#00FF80" opacity="0" material="transparent: true; emissive: #00FF80; emissiveIntensity: 0"></a-box>
-                
-                <!-- East (90°) -->
-                <a-box id="soundE" position="1.5 0 0" width="0.3" height="0.2" depth="0.02" 
-                       color="#00FF00" opacity="0" material="transparent: true; emissive: #00FF00; emissiveIntensity: 0"></a-box>
-                
-                <!-- Southeast (135°) -->
-                <a-box id="soundSE" position="1.06 -1.06 0" width="0.15" height="0.25" depth="0.02" 
-                       color="#80FF00" opacity="0" material="transparent: true; emissive: #80FF00; emissiveIntensity: 0"></a-box>
-                
-                <!-- South (180°) -->
-                <a-box id="soundS" position="0 -1.5 0" width="0.2" height="0.3" depth="0.02" 
-                       color="#FFFF00" opacity="0" material="transparent: true; emissive: #FFFF00; emissiveIntensity: 0"></a-box>
-                
-                <!-- Southwest (225°) -->
-                <a-box id="soundSW" position="-1.06 -1.06 0" width="0.15" height="0.25" depth="0.02" 
-                       color="#FF8000" opacity="0" material="transparent: true; emissive: #FF8000; emissiveIntensity: 0"></a-box>
-                
-                <!-- West (270°) -->
-                <a-box id="soundW" position="-1.5 0 0" width="0.3" height="0.2" depth="0.02" 
-                       color="#FF0000" opacity="0" material="transparent: true; emissive: #FF0000; emissiveIntensity: 0"></a-box>
-                
-                <!-- Northwest (315°) -->
-                <a-box id="soundNW" position="-1.06 1.06 0" width="0.15" height="0.25" depth="0.02" 
-                       color="#FF0080" opacity="0" material="transparent: true; emissive: #FF0080; emissiveIntensity: 0"></a-box>
-                
-                <!-- Central Sound Intensity Ring -->
-                <a-ring id="centralRing" position="0 0 0.1" 
-                        radius-inner="0.8" radius-outer="1.0" 
-                        color="#FFFFFF" opacity="0" 
-                        material="transparent: true; emissive: #FFFFFF; emissiveIntensity: 0">
-                </a-ring>
-            </a-entity>
-
-            <!-- 3. TOPIC BOX (Center) -->
-            <a-entity id="topicBox" position="0 -0.15 -1.5">
+            <!-- 2. TOPIC BOX (Center) -->
+            <a-entity id="topicBox" position="0 -0.15 -2.5">
                 <!-- Topic Background -->
                 <a-box 
                     id="topicBg"
@@ -276,8 +232,8 @@
                 </a-text>
             </a-entity>
 
-            <!-- 4. DASHBOARD PANEL (Right Side) -->
-            <a-entity id="dashboardPanel" position="1.1 0.0 -1.8">
+            <!-- 3. DASHBOARD PANEL (Right Side) -->
+            <a-entity id="dashboardPanel" position="1.1 0.0 -2.8">
                 <!-- Dashboard Background -->
                 <a-box 
                     id="dashboardBg"
@@ -325,8 +281,8 @@
                 </a-text>
             </a-entity>
 
-            <!-- 5. AR MODE TOGGLES (Left Side Vertical) -->
-            <a-entity id="arToggles" position="-1.3 0.1 -1.8">
+            <!-- 4. AR MODE TOGGLES (Left Side Vertical) -->
+            <a-entity id="arToggles" position="-1.3 0.1 -2.8">
                 <!-- Toggle Background -->
                 <a-box 
                     position="0 0 0"
@@ -398,10 +354,54 @@
                 </a-text>
             </a-entity>
 
+            <!-- Microphone Listening Indicator -->
+            <a-entity id="micIndicator" position="0.7 0.5 -1.5" visible="false">
+                <!-- Outer Pulse Ring -->
+                <a-ring 
+                    radius-inner="0.08" 
+                    radius-outer="0.12" 
+                    color="#EF4444" 
+                    opacity="0.6"
+                    animation="property: scale; to: 1.3 1.3 1; dir: alternate; dur: 800; loop: true; easing: easeInOutQuad">
+                </a-ring>
+                
+                <!-- Inner Circle Background -->
+                <a-circle 
+                    radius="0.075" 
+                    color="#DC2626" 
+                    opacity="0.95"
+                    position="0 0 0.01">
+                </a-circle>
+                
+                <!-- Microphone Icon -->
+                <a-text 
+                    value="🎤" 
+                    position="0 0 0.02" 
+                    align="center" 
+                    width="0.4" 
+                    color="#FFFFFF"
+                    shader="sdf"
+                    opacity="1.0">
+                </a-text>
+                
+                <!-- LIVE Label -->
+                <a-text 
+                    value="LIVE" 
+                    position="0 -0.15 0.02" 
+                    align="center" 
+                    width="0.25" 
+                    color="#FFFFFF"
+                    shader="sdf"
+                    font="roboto"
+                    opacity="0.9"
+                    animation="property: opacity; to: 0.4; dir: alternate; dur: 600; loop: true">
+                </a-text>
+            </a-entity>
+
             <!-- Status Indicator (for debugging) -->
             <a-text 
                 id="statusText"
-                position="0 -0.5 -1.2"
+                position="0 -0.5 -2.2"
                 value="ClearPath Loading..."
                 color="#10B981"
                 width="2.5"
@@ -421,16 +421,24 @@
         <!-- Primary Action -->
         <button id="enterVRButton" class="ar-button vr-btn">🥽 Enter AR Mode</button>
         
-        <!-- Feature Controls -->
-        <button id="toggleSpeech" class="ar-button speech-btn">🎤 Speech Recognition</button>
-        <button id="toggleAudio" class="ar-button audio-btn">🔊 Audio Direction</button>
-        <button id="toggleAI" class="ar-button ai-btn">🤖 AI Topics</button>
+        <!-- Feature Controls - Toggleable -->
+        <button id="toggleSpeech" class="ar-button toggle-btn speech-btn" data-active="false">
+            <span class="toggle-indicator">⭕</span>
+            <span class="toggle-label">Captions</span>
+        </button>
+        
+        <button id="toggleAI" class="ar-button toggle-btn ai-btn" data-active="false">
+            <span class="toggle-indicator">⭕</span>
+            <span class="toggle-label">AI Topics</span>
+        </button>
+        
+        <button id="toggleHaptics" class="ar-button toggle-btn haptics-btn" data-active="false">
+            <span class="toggle-indicator">⭕</span>
+            <span class="toggle-label">Haptics</span>
+        </button>
         
         <!-- System Status -->
         <div id="systemStatus" class="status-panel">
-            <div id="speechStatus" class="status-item">🎤 Speech: Ready</div>
-            <div id="audioStatus" class="status-item">🔊 Audio: Ready</div>
-            <div id="aiStatus" class="status-item">🤖 AI: Ready</div>
             <div id="bridgeStatus" class="status-item">🔌 Bridge: Connecting...</div>
         </div>
         
@@ -441,7 +449,7 @@
         </div>
         
         <!-- Test Button (subtle) -->
-        <button id="testCaption" class="ar-button test-btn">Test Captions</button>
+        <button id="testCaption" class="ar-button test-btn">🔍 Test Captions</button>
     </div>
 
     <script>
@@ -485,7 +493,6 @@
             }
             
             // Initialize all AR layers
-            initializeDirectionalIndicators();
             initializeCaptionSystem();
             initializeTopicSystem();
             initializeDashboard();
@@ -519,12 +526,6 @@
             
             if (nameEl) nameEl.setAttribute('value', `Person: ${name}`);
             if (relationEl) relationEl.setAttribute('value', `Relationship: ${relationship}`);
-        }
-
-        // Initialize directional sound indicators
-        function initializeDirectionalIndicators() {
-            console.log('Initializing directional indicators...');
-            // This will be expanded by audio-direction.js
         }
 
         // Initialize live captions
@@ -624,40 +625,74 @@
             });
             
             // Speech Recognition Toggle
-            document.getElementById('toggleSpeech').addEventListener('click', async function() {
-                // Request microphone permission first
-                try {
-                    await navigator.mediaDevices.getUserMedia({ audio: true });
-                    console.log('Microphone permission granted');
-                    
-                    if (window.speechModule) {
-                        window.speechModule.toggle();
-                    } else {
-                        console.error('Speech module not loaded');
+            const speechBtn = document.getElementById('toggleSpeech');
+            speechBtn.addEventListener('click', async function() {
+                const isActive = speechBtn.getAttribute('data-active') === 'true';
+                
+                if (!isActive) {
+                    // Turning ON
+                    try {
+                        await navigator.mediaDevices.getUserMedia({ audio: true });
+                        console.log('Microphone permission granted');
+                        
+                        if (window.speechModule) {
+                            window.speechModule.start();
+                            updateToggleButton(speechBtn, true);
+                        } else {
+                            console.error('Speech module not loaded');
+                        }
+                    } catch (err) {
+                        console.error('Microphone permission denied:', err);
+                        alert('Microphone access required. Enable permissions in browser settings.');
                     }
-                } catch (err) {
-                    console.error('Microphone permission denied:', err);
-                    alert('Microphone access is required for speech recognition. Please enable microphone permissions in your browser settings.');
-                }
-            });
-
-            // Audio Direction Toggle
-            document.getElementById('toggleAudio').addEventListener('click', function() {
-                if (window.audioModule) {
-                    window.audioModule.toggle();
                 } else {
-                    console.error('Audio module not loaded');
+                    // Turning OFF
+                    if (window.speechModule && window.speechModule.stop) {
+                        window.speechModule.stop();
+                    }
+                    updateToggleButton(speechBtn, false);
                 }
             });
 
             // AI Summarization Toggle
-            document.getElementById('toggleAI').addEventListener('click', function() {
-                if (window.aiModule) {
-                    window.aiModule.toggle();
+            const aiBtn = document.getElementById('toggleAI');
+            aiBtn.addEventListener('click', function() {
+                const isActive = aiBtn.getAttribute('data-active') === 'true';
+                
+                if (!isActive) {
+                    // Turning ON
+                    if (window.aiModule) {
+                        window.aiModule.enable();
+                        updateToggleButton(aiBtn, true);
+                    } else {
+                        console.error('AI module not loaded');
+                    }
                 } else {
-                    console.error('AI module not loaded');
+                    // Turning OFF
+                    if (window.aiModule && window.aiModule.disable) {
+                        window.aiModule.disable();
+                    }
+                    updateToggleButton(aiBtn, false);
                 }
             });
+            
+            // Haptics Toggle
+            const hapticsBtn = document.getElementById('toggleHaptics');
+            hapticsBtn.addEventListener('click', function() {
+                const isActive = hapticsBtn.getAttribute('data-active') === 'true';
+                window.hapticsEnabled = !isActive;
+                updateToggleButton(hapticsBtn, !isActive);
+                console.log('Haptics:', !isActive ? 'enabled' : 'disabled');
+            });
+            
+            // Helper function to update toggle button state
+            function updateToggleButton(btn, isActive) {
+                btn.setAttribute('data-active', isActive.toString());
+                const indicator = btn.querySelector('.toggle-indicator');
+                if (indicator) {
+                    indicator.textContent = isActive ? '✅' : '⭕';
+                }
+            }
         }
 
         // Update status text in AR view
@@ -668,64 +703,6 @@
             }
             console.log('Status:', message);
         }
-
-        // Trigger 360-degree directional glow (called by audio-direction.js)
-        window.triggerDirectionalGlow = function(angle, intensity = 0.8, duration = 1500, soundType = 'speech') {
-            // Determine which indicator to activate based on angle (0-360 degrees)
-            let indicatorId = '';
-            let color = '#FFFFFF';
-            
-            if (angle >= 337.5 || angle < 22.5) {
-                indicatorId = 'soundN'; color = '#00FFFF'; // North - Cyan
-            } else if (angle >= 22.5 && angle < 67.5) {
-                indicatorId = 'soundNE'; color = '#00FF80'; // Northeast - Cyan-Green
-            } else if (angle >= 67.5 && angle < 112.5) {
-                indicatorId = 'soundE'; color = '#00FF00'; // East - Green
-            } else if (angle >= 112.5 && angle < 157.5) {
-                indicatorId = 'soundSE'; color = '#80FF00'; // Southeast - Yellow-Green
-            } else if (angle >= 157.5 && angle < 202.5) {
-                indicatorId = 'soundS'; color = '#FFFF00'; // South - Yellow
-            } else if (angle >= 202.5 && angle < 247.5) {
-                indicatorId = 'soundSW'; color = '#FF8000'; // Southwest - Orange
-            } else if (angle >= 247.5 && angle < 292.5) {
-                indicatorId = 'soundW'; color = '#FF0000'; // West - Red
-            } else if (angle >= 292.5 && angle < 337.5) {
-                indicatorId = 'soundNW'; color = '#FF0080'; // Northwest - Magenta
-            }
-            
-            const indicator = document.getElementById(indicatorId);
-            const centralRing = document.getElementById('centralRing');
-            
-            if (indicator) {
-                // Activate directional indicator
-                indicator.setAttribute('opacity', intensity);
-                indicator.setAttribute('material', `transparent: true; emissive: ${color}; emissiveIntensity: ${intensity}`);
-                
-                // Scale based on intensity
-                const scale = 1 + (intensity * 0.5);
-                indicator.setAttribute('scale', `${scale} ${scale} 1`);
-                
-                // Activate central ring for overall sound awareness
-                if (centralRing) {
-                    centralRing.setAttribute('opacity', intensity * 0.3);
-                    centralRing.setAttribute('material', `transparent: true; emissive: ${color}; emissiveIntensity: ${intensity * 0.3}`);
-                }
-                
-                // Fade out after duration
-                setTimeout(() => {
-                    indicator.setAttribute('opacity', 0);
-                    indicator.setAttribute('material', `transparent: true; emissive: ${color}; emissiveIntensity: 0`);
-                    indicator.setAttribute('scale', '1 1 1');
-                    
-                    if (centralRing) {
-                        centralRing.setAttribute('opacity', 0);
-                        centralRing.setAttribute('material', 'transparent: true; emissive: #FFFFFF; emissiveIntensity: 0');
-                    }
-                }, duration);
-                
-                console.log(`360° Sound at ${Math.round(angle)}° with intensity ${intensity.toFixed(2)}`);
-            }
-        };
 
         // Update captions (called by speech-recognition.js)
         window.updateCaption = function(text) {
@@ -776,7 +753,6 @@
             } else {
                 console.error('Topic elements not found!');
             }
-        };
         };
 
         // Global error handling for AR
