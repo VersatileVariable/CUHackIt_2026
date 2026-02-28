@@ -1,13 +1,15 @@
 /*
-  ClearPath Haptic Wristband - Arduino Sketch
+  ClearPath Haptic Belt Clip - Arduino Sketch
   
   Designed for Arduino UNO R3 with:
-  - Active Buzzer for haptic feedback
+  - SG90 Servo Motor for haptic feedback (oscillation)
+  - Active Buzzer for audio alerts
   - RGB LED for visual status indication
   - Serial communication with Web Browser via Web Serial API
   
   Hardware Connections:
-  - Digital Pin 9: Active Buzzer (positive terminal)
+  - Digital Pin 9: SG90 Servo Motor (PWM signal)
+  - Digital Pin 8: Active Buzzer (positive terminal)
   - Digital Pin 6: RGB LED Red
   - Digital Pin 5: RGB LED Green  
   - Digital Pin 3: RGB LED Blue
@@ -32,11 +34,17 @@
   License: MIT
 */
 
+#include <Servo.h>
+
 // Pin Definitions
-const int BUZZER_PIN = 9;     // Active buzzer
+const int SERVO_PIN = 9;      // SG90 Servo Motor
+const int BUZZER_PIN = 8;     // Active Buzzer
 const int LED_RED_PIN = 6;    // RGB LED Red
 const int LED_GREEN_PIN = 5;  // RGB LED Green  
 const int LED_BLUE_PIN = 3;   // RGB LED Blue
+
+// Servo Control
+Servo hapticServo;
 
 // System State
 bool systemActive = false;
@@ -69,6 +77,10 @@ void setup() {
   // Initialize serial communication
   Serial.begin(9600);
   
+  // Initialize servo
+  hapticServo.attach(SERVO_PIN);
+  hapticServo.write(90); // Center position
+  
   // Initialize pins
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(LED_RED_PIN, OUTPUT);
@@ -85,8 +97,8 @@ void setup() {
   // Startup sequence
   startupSequence();
   
-  Serial.println("ClearPath Wristband Ready");
-  Serial.println("Commands: SPEECH_START, SPEECH_END, SPEECH_DETECTED, ENVIRONMENTAL_SOUND, DIRECTION_LEFT, DIRECTION_RIGHT, STATUS_CHECK, RESET");
+  Serial.println("ClearPath Belt Clip Ready");
+  Serial.println("Commands: SPEECH_START, SPEECH_END, SPEECH_DETECTED, ENVIRONMENTAL_SOUND, DIRECTION_LEFT, DIRECTION_RIGHT, TOPIC_CHANGED, STATUS_CHECK, RESET");
   
   systemActive = true;
 }
@@ -146,6 +158,9 @@ void processCommand(String command) {
   } else if (command == "DIRECTION_WEST") {
     directionWestPattern();
     
+  } else if (command == "TOPIC_CHANGED") {
+    topicChangedPattern();
+    
   } else if (command == "STATUS_CHECK") {
     statusCheck();
     
@@ -160,24 +175,24 @@ void processCommand(String command) {
   }
 }
 
-// ===== HAPTIC FEEDBACK PATTERNS =====
+// ===== SERVO HAPTIC FEEDBACK PATTERNS =====
 
 void speechStartPattern() {
-  // Two short pulses with green LED
+  // Two short servo pulses with purple LED
   setLEDColor(COLOR_PURPLE);
   
-  buzzerPulse(SHORT_PULSE);
+  servoHapticPulse(15, 3);  // 15 degree oscillation, 3 times
   delay(PAUSE_SHORT);
-  buzzerPulse(SHORT_PULSE);
+  servoHapticPulse(15, 3);
   
   Serial.println("Speech recognition started");
 }
 
 void speechEndPattern() {
-  // One long pulse with blue LED
+  // One long servo pulse with blue LED
   setLEDColor(COLOR_BLUE);
   
-  buzzerPulse(LONG_PULSE);
+  servoSustainedPulse(20, 800);  // 20 degree oscillation for 800ms
   
   delay(500);
   setLEDColor(COLOR_OFF);
@@ -186,22 +201,19 @@ void speechEndPattern() {
 }
 
 void speechDetectedPattern() {
-  // Three quick pulses with purple LED
+  // Short rapid servo pulses (15-20 degree oscillation, 3 times)
   setLEDColor(COLOR_PURPLE);
   
-  for (int i = 0; i < 3; i++) {
-    buzzerPulse(SHORT_PULSE);
-    delay(PAUSE_SHORT);
-  }
+  servoHapticPulse(18, 3);  // 18 degree oscillation, 3 times
   
   Serial.println("Speech detected");
 }
 
 void environmentalSoundPattern() {
-  // Single medium pulse with cyan LED
+  // Long sustained servo pulse (continuous oscillation for 1 second)
   setLEDColor(COLOR_CYAN);
   
-  buzzerPulse(200);
+  servoSustainedPulse(25, 1000);  // 25 degree oscillation for 1000ms
   
   delay(300);
   setLEDColor(COLOR_OFF);
@@ -209,15 +221,29 @@ void environmentalSoundPattern() {
   Serial.println("Environmental sound detected");
 }
 
+void topicChangedPattern() {
+  // Double pulse with pause — conversation topic has changed
+  setLEDColor(COLOR_YELLOW);
+  
+  servoHapticPulse(20, 2);  // 20 degree oscillation, 2 times
+  delay(PAUSE_LONG);
+  servoHapticPulse(20, 2);  // Second pulse after pause
+  
+  delay(300);
+  setLEDColor(COLOR_OFF);
+  
+  Serial.println("Conversation topic changed");
+}
+
 void directionLeftPattern() {
-  // Left directional pattern: short-long-short with red LED
+  // Left directional pattern with RED LED (mirrors AR glow)
   setLEDColor(COLOR_RED);
   
-  buzzerPulse(SHORT_PULSE);
+  servoHapticPulse(15, 2);  // Short servo pulse
   delay(PAUSE_SHORT);
-  buzzerPulse(LONG_PULSE);
+  servoHapticPulse(25, 1);  // Long servo pulse
   delay(PAUSE_SHORT);
-  buzzerPulse(SHORT_PULSE);
+  servoHapticPulse(15, 2);  // Short servo pulse
   
   delay(300);
   setLEDColor(COLOR_OFF);
@@ -226,14 +252,14 @@ void directionLeftPattern() {
 }
 
 void directionRightPattern() {
-  // Right directional pattern: long-short-long with green LED
+  // Right directional pattern with GREEN LED (mirrors AR glow)
   setLEDColor(COLOR_GREEN);
   
-  buzzerPulse(LONG_PULSE);
+  servoHapticPulse(25, 1);  // Long servo pulse
   delay(PAUSE_SHORT);
-  buzzerPulse(SHORT_PULSE);
+  servoHapticPulse(15, 2);  // Short servo pulse
   delay(PAUSE_SHORT);
-  buzzerPulse(LONG_PULSE);
+  servoHapticPulse(25, 1);  // Long servo pulse
   
   delay(300);
   setLEDColor(COLOR_OFF);
@@ -244,10 +270,10 @@ void directionRightPattern() {
 // 360-DEGREE DIRECTIONAL PATTERNS
 
 void directionNorthPattern() {
-  // North pattern: single long pulse with cyan LED
+  // North pattern: single sustained pulse with cyan LED
   setLEDColor(COLOR_CYAN);
   
-  buzzerPulse(LONG_PULSE);
+  servoSustainedPulse(20, 500);  // 20 degree oscillation for 500ms
   
   delay(300);
   setLEDColor(COLOR_OFF);
@@ -256,12 +282,12 @@ void directionNorthPattern() {
 }
 
 void directionEastPattern() {
-  // East pattern: two medium pulses with green LED  
+  // East pattern: two medium servo pulses with green LED  
   setLEDColor(COLOR_GREEN);
   
-  buzzerPulse(200);
+  servoHapticPulse(20, 2);
   delay(PAUSE_SHORT);
-  buzzerPulse(200);
+  servoHapticPulse(20, 2);
   
   delay(300);
   setLEDColor(COLOR_OFF);
@@ -270,11 +296,11 @@ void directionEastPattern() {
 }
 
 void directionSouthPattern() {
-  // South pattern: three short pulses with yellow LED
+  // South pattern: three short servo pulses with yellow LED
   setLEDColor(COLOR_YELLOW);
   
   for (int i = 0; i < 3; i++) {
-    buzzerPulse(SHORT_PULSE);
+    servoHapticPulse(15, 1);
     delay(PAUSE_SHORT);
   }
   
@@ -288,11 +314,11 @@ void directionWestPattern() {
   // West pattern: long-short-short with red LED
   setLEDColor(COLOR_RED);
   
-  buzzerPulse(LONG_PULSE);
+  servoHapticPulse(25, 1);  // Long pulse
   delay(PAUSE_SHORT);
-  buzzerPulse(SHORT_PULSE);
+  servoHapticPulse(15, 1);  // Short pulse
   delay(PAUSE_SHORT);
-  buzzerPulse(SHORT_PULSE);
+  servoHapticPulse(15, 1);  // Short pulse
   
   delay(300);
   setLEDColor(COLOR_OFF);
@@ -301,11 +327,11 @@ void directionWestPattern() {
 }
 
 void errorPattern() {
-  // Error pattern: rapid pulses with red LED
+  // Error pattern: rapid servo oscillations with red LED
   setLEDColor(COLOR_RED);
   
   for (int i = 0; i < 5; i++) {
-    buzzerPulse(50);
+    servoHapticPulse(10, 1);  // Small rapid oscillation
     delay(50);
   }
   
@@ -316,12 +342,12 @@ void errorPattern() {
 }
 
 void startupSequence() {
-  // Startup sequence: cycle through colors with ascending tones
+  // Startup sequence: cycle through colors with servo movements
   Color colors[] = {COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_YELLOW, COLOR_PURPLE, COLOR_CYAN};
   
   for (int i = 0; i < 6; i++) {
     setLEDColor(colors[i]);
-    buzzerPulse(100);
+    servoHapticPulse(15, 1);
     delay(150);
   }
   
@@ -330,7 +356,7 @@ void startupSequence() {
   
   // Final startup confirmation
   setLEDColor(COLOR_GREEN);
-  buzzerPulse(LONG_PULSE);
+  servoSustainedPulse(20, 300);
   delay(200);
   setLEDColor(COLOR_OFF);
 }
@@ -339,7 +365,7 @@ void heartbeat() {
   // Subtle heartbeat if system is active but no recent commands
   if (systemActive) {
     setLEDColor(COLOR_BLUE);
-    buzzerPulse(50);
+    servoHapticPulse(8, 1);  // Very gentle servo pulse
     delay(100);
     setLEDColor(COLOR_OFF);
     
@@ -347,9 +373,64 @@ void heartbeat() {
   }
 }
 
+// ===== SERVO CONTROL FUNCTIONS =====
+
+void servoHapticPulse(int degrees, int pulses) {
+  // Create haptic feedback by oscillating servo back and forth
+  // degrees: how far to oscillate (5-30 degrees recommended)
+  // pulses: number of oscillation cycles
+  
+  int centerPos = 90;  // Center servo position
+  int minPos = centerPos - (degrees / 2);
+  int maxPos = centerPos + (degrees / 2);
+  
+  // Ensure positions are within servo range
+  minPos = max(0, min(180, minPos));
+  maxPos = max(0, min(180, maxPos));
+  
+  for (int i = 0; i < pulses; i++) {
+    // Oscillate back and forth rapidly
+    hapticServo.write(maxPos);
+    delay(25);  // Fast movement for haptic effect
+    hapticServo.write(minPos);
+    delay(25);
+    hapticServo.write(centerPos);  // Return to center
+    
+    if (i < pulses - 1) {
+      delay(30);  // Brief pause between pulses
+    }
+  }
+}
+
+void servoSustainedPulse(int degrees, int duration) {
+  // Create sustained haptic feedback by continuous oscillation
+  // degrees: oscillation range
+  // duration: how long to oscillate (milliseconds)
+  
+  int centerPos = 90;
+  int minPos = centerPos - (degrees / 2);
+  int maxPos = centerPos + (degrees / 2);
+  
+  // Ensure positions are within servo range
+  minPos = max(0, min(180, minPos));
+  maxPos = max(0, min(180, maxPos));
+  
+  unsigned long startTime = millis();
+  
+  while (millis() - startTime < duration) {
+    hapticServo.write(maxPos);
+    delay(20);
+    hapticServo.write(minPos);
+    delay(20);
+  }
+  
+  hapticServo.write(centerPos);  // Return to center when done
+}
+
 // ===== UTILITY FUNCTIONS =====
 
 void buzzerPulse(int duration) {
+  // Audio feedback through active buzzer (separate from haptic servo)
   digitalWrite(BUZZER_PIN, HIGH);
   delay(duration);
   digitalWrite(BUZZER_PIN, LOW);
@@ -363,7 +444,7 @@ void setLEDColor(Color color) {
 
 void statusCheck() {
   // Report current system status
-  Serial.println("=== ClearPath Wristband Status ===");
+  Serial.println("=== ClearPath Belt Clip Status ===");
   Serial.print("System Active: ");
   Serial.println(systemActive ? "YES" : "NO");
   Serial.print("Speech Listening: ");
@@ -377,15 +458,15 @@ void statusCheck() {
   
   // Status confirmation pattern
   setLEDColor(COLOR_BLUE);
-  buzzerPulse(SHORT_PULSE);
+  servoHapticPulse(10, 2);
   delay(PAUSE_SHORT);
-  buzzerPulse(SHORT_PULSE);
+  servoHapticPulse(10, 2);
   delay(300);
   setLEDColor(COLOR_OFF);
 }
 
 void resetSystem() {
-  Serial.println("Resetting ClearPath Wristband...");
+  Serial.println("Resetting ClearPath Belt Clip...");
   
   // Reset state variables
   systemActive = false;
@@ -395,7 +476,7 @@ void resetSystem() {
   // Visual reset indicator
   for (int i = 0; i < 3; i++) {
     setLEDColor(COLOR_RED);
-    buzzerPulse(100);
+    servoHapticPulse(10, 1);
     delay(100);
     setLEDColor(COLOR_OFF);
     delay(100);
@@ -438,7 +519,7 @@ void customPattern(String patternCode) {
 }
 
 /*
-  ===== WIRING DIAGRAM =====
+  ===== BELT CLIP WIRING DIAGRAM =====
   
   Arduino UNO R3:
   ┌─────────────┐
@@ -449,8 +530,8 @@ void customPattern(String patternCode) {
   │ ~5  → Green │ ← RGB LED Green
   │ ~6  → Red   │ ← RGB LED Red
   │  7          │
-  │  8          │
-  │ ~9  → Buzz+ │ ← Active Buzzer (+)
+  │  8  → Buzz+ │ ← Active Buzzer (+)
+  │ ~9  → Servo │ ← SG90 Servo Signal (Orange wire)
   │ 10          │
   │ 11          │
   │ 12          │
@@ -458,13 +539,59 @@ void customPattern(String patternCode) {
   └─────────────┘
   
   Power Rails:
-  5V  → Positive power rail
-  GND → All component grounds
+  5V  → Servo Red wire + Buzzer + LED power
+  GND → Servo Brown wire + All component grounds
   
-  Components:
-  - Active Buzzer: Pin 9 (+), GND (-)
-  - RGB LED: Pins 6,5,3 (R,G,B), GND (common cathode)
-  - Resistors: 220Ω for each LED pin (current limiting)
+  3D Printed Belt Clip Components:
+  - SG90 Servo Motor: Haptic vibration via oscillation
+  - Active Buzzer: Audio feedback (Pin 8)
+  - RGB LED: Visual status with window cutout
+  - Arduino UNO: In user's pocket, connected via jumper wires
+  
+  ===== FUSION 360 DESIGN SPECIFICATIONS =====
+  
+  ENCLOSURE BODY (Main Housing):
+  - External Dimensions: 60mm x 40mm x 20mm
+  - Wall Thickness: 2.0mm (for PLA strength)
+  - Internal Cavity: 56mm x 36mm x 16mm
+  
+  SERVO MOUNTING:
+  - SG90 Dimensions: 22.8mm x 12.2mm x 29mm
+  - Mounting Posts: 4x M2 threaded inserts or 2mm holes
+  - Servo Horn Access: 8mm diameter hole in top
+  - Oscillation Clearance: 15mm radius around servo horn
+  
+  LED WINDOW:
+  - Diameter: 8mm (for 5mm RGB LED with diffusion)
+  - Depth: 1mm inset for flush LED placement
+  - Material: Clear PLA or cutout for transparency
+  
+  BUZZER MOUNTING:
+  - Active Buzzer: 12mm diameter x 9.5mm height
+  - Mounting: Friction fit or small screws
+  - Sound Ports: 4x 2mm holes for audio output
+  
+  CABLE EXIT CHANNEL:
+  - Width: 8mm (for 6-8 jumper wires)
+  - Height: 4mm 
+  - Location: Right side of enclosure
+  - Strain Relief: 2mm radius curves
+  
+  BELT CLIP RAIL (Separate Part):
+  - Clip Opening: 42mm (fits up to 40mm belts)
+  - Spring Arm Thickness: 1.5mm (flexible PLA)
+  - Snap Fit Tabs: 2x tabs, 0.3mm interference fit
+  - Material: PETG or flexible PLA if available
+  
+  PRINT SETTINGS:
+  - Layer Height: 0.2mm (balance quality/speed)
+  - Infill: 20% (sufficient strength)
+  - Supports: None if oriented properly
+  - Print Time: 45-90 minutes total for both parts
+  
+  ORIENTATION:
+  - Enclosure: LED window facing up (no supports needed)
+  - Belt Clip: Spring arm vertical (natural flex direction)
   
   ===== COMMAND REFERENCE =====
   
@@ -473,18 +600,33 @@ void customPattern(String patternCode) {
   - SPEECH_END: User stopped voice recognition
   - SPEECH_DETECTED: Speech was heard and processed
   - ENVIRONMENTAL_SOUND: Background noise detected
-  - DIRECTION_LEFT: Sound source on left (legacy compatibility)
-  - DIRECTION_RIGHT: Sound source on right (legacy compatibility)
+  - DIRECTION_LEFT: Sound source on left (legacy compatibility + RED LED)
+  - DIRECTION_RIGHT: Sound source on right (legacy compatibility + GREEN LED)
   - DIRECTION_NORTH: 360° Sound from north (315-45°, front-facing)
   - DIRECTION_EAST: 360° Sound from east (45-135°, right side)
   - DIRECTION_SOUTH: 360° Sound from south (135-225°, behind user)
   - DIRECTION_WEST: 360° Sound from west (225-315°, left side)
+  - TOPIC_CHANGED: Double pulse - conversation topic has changed
   - STATUS_CHECK: Request current system status
-  - RESET: Reset wristband to initial state
+  - RESET: Reset belt clip to initial state
   
   Arduino → Browser:
   - Status messages via Serial.println()
   - Confirmation of received commands
   - System diagnostics and uptime
   - Error reports for debugging
+  
+  HAPTIC PATTERNS:
+  - Short Rapid Pulse: 3 quick servo oscillations (speech detected)
+  - Long Sustained Pulse: Continuous oscillation for 1 second (environmental)
+  - Double Pulse with Pause: Topic change indication
+  - Directional Patterns: Unique servo sequences for each direction
+  
+  LED COLORS MIRROR AR GLOWS:
+  - RED: Left/West directional sounds
+  - GREEN: Right/East directional sounds  
+  - CYAN: Environmental/North sounds
+  - YELLOW: South/Topic change
+  - PURPLE: Speech recognition active
+  - BLUE: System status/heartbeat
 */

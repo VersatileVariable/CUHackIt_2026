@@ -6,7 +6,7 @@
 
 ## 🌟 Project Overview
 
-ClearPath is a revolutionary AR accessibility system designed for deaf, hard of hearing, and cognitively impaired users. Using the Meta Quest 3's passthrough AR capability, ClearPath overlays real-time information directly in the user's field of vision, paired with a companion haptic wristband for tactile feedback.
+ClearPath is a revolutionary AR accessibility system designed for deaf, hard of hearing, and cognitively impaired users. Using the Meta Quest 3's passthrough AR capability, ClearPath overlays real-time information directly in the user's field of vision, paired with a companion haptic belt clip for tactile feedback.
 
 ### 🎯 Target Users
 - **Deaf and Hard of Hearing** - Live captions and directional sound indicators
@@ -21,7 +21,7 @@ ClearPath is a revolutionary AR accessibility system designed for deaf, hard of 
 4. **Dashboard Panel** - Person identification and relationship context
 
 ### Hardware Components
-- **Haptic Wristband** - Arduino-based with distinct buzzing patterns
+- **Haptic Belt Clip** - Arduino-based with servo oscillation patterns
 - **Environmental Awareness** - Webcam-powered directional audio detection
 - **Voice Recognition** - Browser-based Web Speech API (no external APIs required)
 
@@ -37,7 +37,7 @@ ClearPath is a revolutionary AR accessibility system designed for deaf, hard of 
 ### Hardware
 - **Meta Quest 3** - AR headset with passthrough mode
 - **Arduino UNO R3** - Microcontroller for haptic feedback
-- **Active Buzzer + RGB LED** - Wristband feedback components
+- **SG90 Servo Motor + Active Buzzer + RGB LED** - Belt clip feedback components
 - **Logitech Webcam** - Environmental sound direction detection
 - **Breadboard & Components** - Prototyping hardware
 
@@ -52,11 +52,11 @@ ClearPath/
 ├── js/
 │   ├── ar-manager.js       # AR overlay management
 │   ├── speech-recognition.js  # Web Speech API integration
-│   ├── serial-communication.js  # Arduino wristband control
+│   ├── serial-communication.js  # Arduino belt clip control
 │   ├── audio-direction.js  # Webcam audio direction detection
 │   └── ai-summarizer.js    # Conversation topic generation
 ├── arduino/
-│   └── clearpath_wristband.ino  # Arduino haptic wristband code
+│   └── clearpath_wristband.ino  # Arduino haptic belt clip code
 └── README.md               # This file
 ```
 
@@ -83,9 +83,11 @@ ClearPath/
 ## 🚀 Quick Start
 
 ### 1. Hardware Setup
-1. Wire Arduino components according to circuit diagram
-2. Connect Arduino to computer via USB
-3. Set up webcam for audio direction detection
+1. Wire Arduino components according to circuit diagram (see Fusion 360 design guide)
+2. 3D print belt clip enclosure using PLA filament (70-90 minute print time)
+3. Assemble servo motor, buzzer, and LED into printed housing
+4. Connect Arduino to computer via USB
+5. Attach completed belt clip to user's belt
 
 ### 2. Software Setup
 1. Clone this repository
@@ -95,7 +97,7 @@ ClearPath/
 
 ### 3. Usage
 1. Put on Meta Quest 3 with passthrough mode enabled
-2. Arduino wristband provides tactile feedback
+2. Arduino belt clip provides tactile feedback via servo oscillation
 3. AR overlays display real-time information
 4. Webcam detects environmental sound direction
 
@@ -121,17 +123,26 @@ ClearPath/
 - **Setup**: Configured via caregiver/user setup screen
 - **Purpose**: Cognitive assistance and context
 
-## 🔌 Arduino Wiring Diagram
+## 🔌 Arduino Belt Clip Hardware
 
+### Wiring Diagram
 ```
 Arduino UNO R3 Connections:
-├── Digital Pin 9  → Active Buzzer (+)
+├── Digital Pin 9  → SG90 Servo Signal (Orange)
+├── Digital Pin 8  → Active Buzzer (+)
 ├── Digital Pin 6  → RGB LED (Red)
 ├── Digital Pin 5  → RGB LED (Green)
 ├── Digital Pin 3  → RGB LED (Blue)
-├── GND           → All component grounds
-└── 5V            → Power rail
+├── 5V             → Servo Power (Red) + Buzzer + LED power
+└── GND            → Servo Ground (Brown) + All component grounds
 ```
+
+### 3D Printed Enclosure
+- **Design Files**: See [Fusion 360 Design Guide](FUSION360_DESIGN_GUIDE.md)
+- **Print Time**: 70-90 minutes for both parts
+- **Materials**: PLA filament (black recommended)
+- **Components**: SG90 servo, active buzzer, RGB LED
+- **Mounting**: Professional belt clip with snap-fit assembly
 
 ## 🌐 Browser Requirements
 
@@ -148,7 +159,7 @@ Arduino UNO R3 Connections:
 1. **Setup** - Judge puts on Quest 3, Anna explains system
 2. **Speech Test** - Someone speaks, captions appear instantly
 3. **Direction Test** - Sound from different directions triggers edge glows
-4. **Wristband Test** - Arduino buzzes with distinct patterns
+4. **Belt Clip Test** - Arduino servo oscillates with distinct patterns
 5. **Context Test** - Conversation topic updates automatically
 6. **Dashboard Test** - Person information displays correctly
 
@@ -169,7 +180,7 @@ Arduino UNO R3 Connections:
 ## 🤝 Team
 
 - **Person 1 (Anna)** - AR frontend, WebXR, Web Speech API, all overlay layers
-- **Person 2** - Arduino haptic wristband, Web Serial API, hardware integration
+- **Person 2** - Arduino haptic belt clip, Web Serial API, hardware integration, 3D design
 
 ## 📄 License
 

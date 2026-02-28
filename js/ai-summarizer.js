@@ -155,6 +155,13 @@
             if (summary && summary !== lastSummary) {
                 lastSummary = summary;
                 updateTopicDisplay(summary);
+                
+                // Send TOPIC_CHANGED command to belt clip
+                if (window.serialModule && window.serialModule.isConnected()) {
+                    window.serialModule.sendCommand('TOPIC_CHANGED');
+                    console.log('🔗 Topic change sent to belt clip');
+                }
+                
                 console.log('✅ Topic summary generated:', summary);
             }
 
@@ -169,6 +176,12 @@
                     if (summary && summary !== lastSummary) {
                         lastSummary = summary;
                         updateTopicDisplay(summary);
+                        
+                        // Send TOPIC_CHANGED command to belt clip
+                        if (window.serialModule && window.serialModule.isConnected()) {
+                            window.serialModule.sendCommand('TOPIC_CHANGED');
+                            console.log('🔗 Topic change sent to belt clip (fallback)');
+                        }
                     }
                 } catch (fallbackError) {
                     console.error('❌ Local summarization failed:', fallbackError);
