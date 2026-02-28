@@ -1,4 +1,4 @@
-# 🔧 ClearPath AR Hardware Setup Guide
+# [TOOL] ClearPath AR Hardware Setup Guide
 
 ## Complete Component List
 
@@ -25,7 +25,7 @@
 
 ---
 
-## 📐 Wiring Diagram
+## [RULER] Wiring Diagram
 
 ```
                     ARDUINO UNO R3
@@ -71,7 +71,7 @@
 
 ---
 
-## 🗺️ Physical Hardware Layout Map
+## [MAP] Physical Hardware Layout Map
 
 ### Breadboard Assembly Overview
 ```
@@ -164,22 +164,22 @@ Active Buzzer:  12mm diameter × 9.5mm height
 ┌─────────────────────────────────────────────────────────────┐
 │                     WIRING BEST PRACTICES                  │
 ├─────────────────────────────────────────────────────────────┤
-│ ✅ Use different colors for different signals:             │
+│ [CHECK] Use different colors for different signals:             │
 │    Red: +5V Power                                          │
 │    Black: Ground (GND)                                     │
 │    Orange: Servo PWM signal                                │ 
 │    Blue: Digital I/O signals                               │
 │                                                             │
-│ ✅ Keep wires short to reduce electrical noise             │
-│ ✅ Route power wires away from signal wires                │
-│ ✅ Test each connection with multimeter                     │
-│ ✅ Leave extra length for movement/adjustments              │
+│ [CHECK] Keep wires short to reduce electrical noise             │
+│ [CHECK] Route power wires away from signal wires                │
+│ [CHECK] Test each connection with multimeter                     │
+│ [CHECK] Leave extra length for movement/adjustments              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ⚡ Step-by-Step Wiring
+## [POWER] Step-by-Step Wiring
 
 ### Step 1: Power Rails Setup
 1. **Connect Arduino GND** → Breadboard negative rail (blue/black)
@@ -241,7 +241,7 @@ Pin Assignment Summary:
 
 ---
 
-## 🔌 Assembly Options
+## [PLUG] Assembly Options
 
 ### Option A: Quick Breadboard Setup (30 minutes)
 
@@ -278,7 +278,7 @@ Pin Assignment Summary:
 
 ---
 
-## 🧪 Testing Procedure
+## [TEST] Testing Procedure
 
 ### Phase 1: Power-On Test
 1. **Connect Arduino** to computer via USB
@@ -359,7 +359,7 @@ void loop() {
 
 ---
 
-## 🔧 Troubleshooting Common Issues
+## [WRENCH] Troubleshooting Common Issues
 
 ### LED Not Working
 **Symptoms:** LED doesn't light up or wrong colors
@@ -403,7 +403,7 @@ void loop() {
 
 ---
 
-## 📦 Professional Tips
+## [BOX] Professional Tips
 
 ### Wire Management
 - **Color coding**: Red=power, Black=ground, Other colors=signals
@@ -439,20 +439,20 @@ void loop() {
 | **Soldered** | 2 hours | Intermediate | Medium |  
 | **3D Printed** | 3 hours + print | Advanced | High |
 
-## 🎯 Hackathon Strategy
+## [TARGET] Hackathon Strategy
 
 For CUHackIt 2026, I recommend:
 
-**🏃‍♀️ Quick Demo Setup (Day 1)**
+**[FAST] Quick Demo Setup (Day 1)**
 - Start with breadboard setup for rapid testing
 - Verify all components work individually  
 - Upload ClearPath firmware and test Web Serial connection
 - Focus on getting AR app communicating with hardware
 
-**🏆 Professional Presentation (Day 2)** 
+**[TROPHY] Professional Presentation (Day 2)** 
 - If time permits, assemble 3D printed version
 - Clean up wiring and add proper strain relief
 - Test complete system integration
 - Practice demo presentation with reliable hardware setup
 
-Your hardware setup is now ready to provide amazing haptic feedback for your ClearPath AR accessibility system! 🚀
+Your hardware setup is now ready to provide amazing haptic feedback for your ClearPath AR accessibility system! [ROCKET]
