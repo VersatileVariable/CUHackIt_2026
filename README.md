@@ -83,17 +83,18 @@ ClearPath/
 ## 🚀 Quick Start
 
 ### 1. Hardware Setup
-1. Wire Arduino components according to circuit diagram (see Fusion 360 design guide)
-2. 3D print belt clip enclosure using PLA filament (70-90 minute print time)
-3. Assemble servo motor, buzzer, and LED into printed housing
-4. Connect Arduino to computer via USB
-5. Attach completed belt clip to user's belt
+1. **Assembly**: Follow [HARDWARE_SETUP.md](HARDWARE_SETUP.md) for complete wiring guide
+2. **Quick Reference**: Use [WIRING_REFERENCE.md](WIRING_REFERENCE.md) for pin connections
+3. **Testing**: Verify each component works individually before integration
+4. **3D Printing**: Optional professional enclosure (see Fusion 360 guide)
+5. **Arduino Firmware**: Upload `arduino/clearpath_wristband.ino`
 
-### 2. Software Setup
-1. Clone this repository
-2. Open `setup.html` in Meta Quest 3 browser
-3. Configure user information and relationships
-4. Launch `index.html` for full AR experience
+### 2. Software Deployment  
+1. **Local Server**: Run `./deploy.sh` to start HTTP server
+2. **Quest Setup**: Enable WebXR flags in Meta Quest 3 browser
+3. **Configuration**: Open `http://YOUR_IP:8000/setup.html` for user setup
+4. **Testing**: Use `http://YOUR_IP:8000/test.html` to verify all systems
+5. **Launch**: Navigate to `http://YOUR_IP:8000/index.html` for AR experience
 
 ### 3. Usage
 1. Put on Meta Quest 3 with passthrough mode enabled
@@ -125,6 +126,11 @@ ClearPath/
 
 ## 🔌 Arduino Belt Clip Hardware
 
+### 📖 Setup Guides
+- **[HARDWARE_SETUP.md](HARDWARE_SETUP.md)** - Complete assembly instructions with troubleshooting
+- **[WIRING_REFERENCE.md](WIRING_REFERENCE.md)** - Quick pin connections and component testing
+- **[FUSION360_DESIGN_GUIDE.md](FUSION360_DESIGN_GUIDE.md)** - 3D printing specifications
+
 ### Wiring Diagram
 ```
 Arduino UNO R3 Connections:
@@ -137,12 +143,18 @@ Arduino UNO R3 Connections:
 └── GND            → Servo Ground (Brown) + All component grounds
 ```
 
+### Component List
+- **SG90 Servo Motor** - Haptic feedback via oscillation
+- **Active Buzzer** - Audio alerts and backup feedback  
+- **RGB LED** - Visual status indicators
+- **220Ω Resistors x3** - LED current limiting
+- **Breadboard + Jumper Wires** - Quick assembly
+
 ### 3D Printed Enclosure
-- **Design Files**: See [Fusion 360 Design Guide](FUSION360_DESIGN_GUIDE.md)
+- **Design Files**: Complete Fusion 360 specifications
 - **Print Time**: 70-90 minutes for both parts
 - **Materials**: PLA filament (black recommended)
-- **Components**: SG90 servo, active buzzer, RGB LED
-- **Mounting**: Professional belt clip with snap-fit assembly
+- **Assembly**: Professional belt clip with snap-fit mounting
 
 ## 🌐 Browser Requirements
 
