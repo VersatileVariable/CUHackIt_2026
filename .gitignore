@@ -30,9 +30,17 @@ Thumbs.db
 *.log
 logs/
 
-# Arduino IDE
-*.ino.bak
-*.ino.orig
+# SSL Certificates (generated locally)
+*.pem
+cert.pem
+key.pem
+
+# Expo
+.expo/
+.expo-shared/
+
+# Tunnel services
+*.tunnel
 
 # WebXR/AR testing
 *.cache

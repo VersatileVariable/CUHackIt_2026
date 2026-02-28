@@ -40,13 +40,13 @@
 
     // Initialize AI summarization
     function initAISummarization() {
-        console.log('🤖 Initializing AI summarization...');
+        console.log('Initializing AI summarization...');
         
         // Try to detect available AI services
         detectAvailableAIServices();
         
         updateStatus('AI summarization ready');
-        console.log('✅ AI summarization initialized');
+        console.log('AI summarization initialized');
         return true;
     }
 
@@ -56,7 +56,7 @@
         // Can be extended to integrate with OpenAI, Anthropic, etc.
         
         if (config.useLocalFallback) {
-            console.log('🤖 Using local fallback summarization');
+            console.log('Using local fallback summarization');
             config.apiEndpoint = 'local';
         }
         
@@ -67,7 +67,7 @@
         // - Azure Cognitive Services
         // - Local AI models via WebAssembly
         
-        console.log('🔍 AI service detection complete');
+        console.log('AI service detection complete');
     }
 
     // Start AI summarization
@@ -76,7 +76,7 @@
             isActive = true;
             startPeriodicSummarization();
             updateStatus('AI topic generation active');
-            console.log('🚀 AI summarization started');
+            console.log('AI summarization started');
         }
     }
 
@@ -89,7 +89,7 @@
                 summaryTimer = null;
             }
             updateStatus('AI topic generation stopped');
-            console.log('⏹️ AI summarization stopped');
+            console.log('AI summarization stopped');
         }
     }
 
@@ -114,7 +114,7 @@
             }
         }, config.updateIntervalMs);
         
-        console.log('⏰ Periodic summarization started');
+        console.log('Periodic summarization started');
     }
 
     // Update transcript from speech recognition
@@ -126,7 +126,7 @@
             currentTranscript = '...' + currentTranscript.slice(-(config.maxTranscriptLength - 3));
         }
         
-        console.log('📝 Transcript updated:', currentTranscript.length, 'characters');
+        console.log('Transcript updated:', currentTranscript.length, 'characters');
         
         // Trigger immediate summary if significant content
         if (isActive && currentTranscript.length > config.minTranscriptLength * 2) {
@@ -141,7 +141,7 @@
         }
 
         requestInProgress = true;
-        console.log('🤖 Generating topic summary...');
+        console.log('Generating topic summary...');
 
         try {
             let summary = '';
@@ -156,35 +156,41 @@
                 lastSummary = summary;
                 updateTopicDisplay(summary);
                 
-                // Send TOPIC_CHANGED command to belt clip
-                if (window.serialModule && window.serialModule.isConnected()) {
-                    window.serialModule.sendCommand('TOPIC_CHANGED');
-                    console.log('🔗 Topic change sent to belt clip');
+                // Send to bridge for iPhone haptic (heavy+light impact, purple flash)
+                if (window.bridgeModule && window.bridgeModule.isConnected()) {
+                    window.bridgeModule.notifyTopicChanged({
+                        topic: summary,
+                        timestamp: Date.now()
+                    });
+                    console.log('Topic change sent to bridge');
                 }
                 
-                console.log('✅ Topic summary generated:', summary);
+                console.log('Topic summary generated:', summary);
             }
 
         } catch (error) {
-            console.error('❌ Error generating summary:', error);
+            console.error('Error generating summary:', error);
             
             // Fallback to local summarization
             if (config.apiEndpoint !== 'local') {
-                console.log('🔄 Falling back to local summarization...');
+                console.log('Falling back to local summarization...');
                 try {
                     const summary = await generateLocalSummary(currentTranscript);
                     if (summary && summary !== lastSummary) {
                         lastSummary = summary;
                         updateTopicDisplay(summary);
                         
-                        // Send TOPIC_CHANGED command to belt clip
-                        if (window.serialModule && window.serialModule.isConnected()) {
-                            window.serialModule.sendCommand('TOPIC_CHANGED');
-                            console.log('🔗 Topic change sent to belt clip (fallback)');
+                        // Send to bridge for iPhone haptic (fallback path)
+                        if (window.bridgeModule && window.bridgeModule.isConnected()) {
+                            window.bridgeModule.notifyTopicChanged({
+                                topic: summary,
+                                timestamp: Date.now()
+                            });
+                            console.log('Topic change sent to bridge (fallback)');
                         }
                     }
                 } catch (fallbackError) {
-                    console.error('❌ Local summarization failed:', fallbackError);
+                    console.error('Local summarization failed:', fallbackError);
                     updateStatus('Topic generation failed');
                 }
             }
@@ -225,7 +231,7 @@
 
     // Generate local summary using keyword extraction
     async function generateLocalSummary(transcript) {
-        console.log('🏠 Generating local summary...');
+        console.log('Generating local summary...');
         
         const lowerTranscript = transcript.toLowerCase();
         const words = lowerTranscript.split(/\s+/);
@@ -291,7 +297,7 @@
             summary = summary.substring(0, config.maxSummaryLength - 3) + '...';
         }
         
-        console.log('📋 Local summary generated:', summary);
+        console.log('Local summary generated:', summary);
         return summary;
     }
 
@@ -343,7 +349,7 @@
             window.updateTopic(summary);
         }
         
-        console.log('📊 Topic display updated:', summary);
+        console.log('Topic display updated:', summary);
     }
 
     // Update status display
@@ -374,7 +380,7 @@
     function configureAPI(endpoint, apiKey) {
         config.apiEndpoint = endpoint;
         config.apiKey = apiKey;
-        console.log('🔧 AI API configured:', endpoint);
+        console.log('AI API configured:', endpoint);
     }
 
     // Export AI module to global scope
@@ -391,11 +397,11 @@
 
     // Auto-initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🤖 AI Summarization Module Loaded');
+        console.log('AI Summarization Module Loaded');
         initAISummarization();
         updateStatus('Ready');
     });
 
-    console.log('✅ ClearPath AI Summarization Module Ready');
+    console.log('ClearPath AI Summarization Module Ready');
 
 })();

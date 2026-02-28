@@ -1,7 +1,7 @@
 /**
  * ClearPath AR Manager Module
  * Coordinates all AR systems and manages overall application state
- * Handles integration between speech, audio, AI, and Arduino systems
+ * Handles integration between speech, audio, and AI systems
  */
 
 (function() {
@@ -12,7 +12,6 @@
     let systemsReady = {
         speech: false,
         audio: false,
-        serial: false,
         ai: false
     };
 
@@ -22,7 +21,6 @@
         speechEvents: 0,
         directionEvents: 0,
         topicUpdates: 0,
-        arduinoCommands: 0,
         errors: 0
     };
 
@@ -37,11 +35,11 @@
     // Initialize AR Manager and all subsystems
     function initializeARManager() {
         if (isInitialized) {
-            console.log('⚠️ AR Manager already initialized');
+            console.log('AR Manager already initialized');
             return true;
         }
 
-        console.log('🚀 Initializing ClearPath AR Manager...');
+        console.log('Initializing ClearPath AR Manager...');
         
         try {
             // Set up global error handling
@@ -66,13 +64,13 @@
                 setTimeout(autoStartSystems, 1000);
             }
             
-            console.log('✅ ClearPath AR Manager initialized successfully');
+            console.log('ClearPath AR Manager initialized successfully');
             logStatus('AR Manager ready');
             
             return true;
             
         } catch (error) {
-            console.error('❌ Failed to initialize AR Manager:', error);
+            console.error('Failed to initialize AR Manager:', error);
             logStatus('AR Manager initialization failed: ' + error.message);
             return false;
         }
@@ -80,27 +78,26 @@
 
     // Initialize all subsystems
     function initializeSubsystems() {
-        console.log('🔧 Initializing subsystems...');
+        console.log('Initializing subsystems...');
         
         // Check if modules are loaded
         const modules = {
             speech: window.speechModule,
             audio: window.audioModule,
-            serial: window.serialModule,  
             ai: window.aiModule
         };
 
         for (const [name, module] of Object.entries(modules)) {
             if (module) {
-                console.log(`✅ ${name} module available`);
+                console.log(`${name} module available`);
                 systemsReady[name] = true;
             } else {
-                console.warn(`⚠️ ${name} module not available`);
+                console.warn(`${name} module not available`);
                 systemsReady[name] = false;
             }
         }
 
-        console.log('🔧 Subsystem initialization complete');
+        console.log('Subsystem initialization complete');
         logSystemStatus();
     }
 
@@ -108,21 +105,21 @@
     function setupGlobalErrorHandling() {
         window.addEventListener('error', function(event) {
             performanceStats.errors++;
-            console.error('💥 Global error:', event.error);
+            console.error('Global error:', event.error);
             
             // Attempt recovery for certain errors
             attemptErrorRecovery(event.error);
             
             // Shutdown if too many errors
             if (performanceStats.errors >= config.maxErrorsBeforeShutdown) {
-                console.error('🛑 Too many errors, shutting down systems');
+                console.error('Too many errors, shutting down systems');
                 shutdownAllSystems();
             }
         });
 
         window.addEventListener('unhandledrejection', function(event) {
             performanceStats.errors++;
-            console.error('💥 Unhandled promise rejection:', event.reason);
+            console.error('Unhandled promise rejection:', event.reason);
         });
     }
 
@@ -135,7 +132,7 @@
             checkSystemHealth();
         }, config.systemCheckIntervalMs);
         
-        console.log('📊 System monitoring configured');
+        console.log('System monitoring configured');
     }
 
     // Set up event coordination between systems
@@ -144,23 +141,11 @@
         document.addEventListener('speechstart', function() {
             performanceStats.speechEvents++;
             
-            // Notify Arduino
-            if (systemsReady.serial && window.serialModule) {
-                window.serialModule.notifySpeechStart();
-                performanceStats.arduinoCommands++;
-            }
-            
-            console.log('🎤 Speech recognition started - systems notified');
+            console.log('Speech recognition started - systems notified');
         });
 
         document.addEventListener('speechend', function() {
-            // Notify Arduino
-            if (systemsReady.serial && window.serialModule) {
-                window.serialModule.notifySpeechEnd();
-                performanceStats.arduinoCommands++;
-            }
-            
-            console.log('🎤 Speech recognition ended - systems notified');
+            console.log('Speech recognition ended - systems notified');
         });
 
         // Direction Detection Events
@@ -171,17 +156,17 @@
             const direction = event.detail.direction;
             const intensity = event.detail.intensity;
             
-            console.log(`🎯 Direction event coordinated: ${direction} (${intensity})`);
+            console.log(`Direction event coordinated: ${direction} (${intensity})`);
         });
 
         // Topic Update Events
         document.addEventListener('topicupdated', function(event) {
             performanceStats.topicUpdates++;
             
-            console.log('🤖 Topic updated:', event.detail.topic);
+            console.log('Topic updated:', event.detail.topic);
         });
 
-        console.log('🔗 Event coordination configured');
+        console.log('Event coordination configured');
     }
 
     // Set up UI integration
@@ -189,7 +174,6 @@
         // Enhance button click handlers with coordination
         const speechButton = document.getElementById('toggleSpeech');
         const audioButton = document.getElementById('toggleAudio');
-        const serialButton = document.getElementById('connectArduino');
         const aiButton = document.getElementById('toggleAI');
 
         if (speechButton) {
@@ -204,19 +188,13 @@
             });
         }
 
-        if (serialButton) {
-            serialButton.addEventListener('click', function() {
-                coordinatedSerialToggle();
-            });
-        }
-
         if (aiButton) {
             aiButton.addEventListener('click', function() {
                 coordinatedAIToggle();
             });
         }
 
-        console.log('🖥️ UI integration configured');
+        console.log('UI integration configured');
     }
 
     // Coordinated system toggles
@@ -248,20 +226,6 @@
         }
     }
 
-    function coordinatedSerialToggle() {
-        if (systemsReady.serial && window.serialModule) {
-            const status = window.serialModule.getStatus();
-            
-            if (!status.connected) {
-                window.serialModule.connect();
-                logStatus('Arduino connection initiated');
-            } else {
-                window.serialModule.disconnect();
-                logStatus('Arduino disconnected');
-            }
-        }
-    }
-
     function coordinatedAIToggle() {
         if (systemsReady.ai && window.aiModule) {
             window.aiModule.toggle();
@@ -271,49 +235,62 @@
 
     // Auto-start recommended systems
     function autoStartSystems() {
-        console.log('🚀 Auto-starting systems...');
+        console.log('Auto-starting systems...');
         
         try {
             // Start audio direction detection
             if (systemsReady.audio && window.audioModule) {
                 window.audioModule.init().then(() => {
-                    console.log('👂 Audio direction auto-started');
+                    console.log('Audio direction auto-started');
                 });
             }
             
             // Initialize speech recognition (don't start listening yet)
             if (systemsReady.speech && window.speechModule) {
-                window.speechModule.init();
-                console.log('🎤 Speech recognition initialized');
+                const initResult = window.speechModule.init();
+                if (initResult && typeof initResult.then === 'function') {
+                    initResult.then(() => {
+                        console.log('Speech recognition initialized');
+                    }).catch(err => {
+                        console.warn('Speech init delayed:', err);
+                    });
+                } else {
+                    console.log('Speech recognition initialized');
+                }
             }
             
             // Initialize AI summarization
             if (systemsReady.ai && window.aiModule) {
                 window.aiModule.init();
-                console.log('🤖 AI summarization initialized');
+                console.log('AI summarization initialized');
             }
             
             logStatus('Core systems auto-started');
             
         } catch (error) {
-            console.error('❌ Error auto-starting systems:', error);
+            console.error('Error auto-starting systems:', error);
             logStatus('Auto-start failed: ' + error.message);
         }
     }
 
     // Attempt error recovery
     function attemptErrorRecovery(error) {
-        console.log('🔄 Attempting error recovery...');
+        console.log('Attempting error recovery...');
         
         // Reset unstable systems
         if (error.message.includes('speech') || error.message.includes('recognition')) {
             if (systemsReady.speech && window.speechModule) {
                 try {
                     window.speechModule.stop();
-                    setTimeout(() => window.speechModule.init(), 1000);
-                    console.log('🔄 Speech system reset');
+                    setTimeout(() => {
+                        const result = window.speechModule.init();
+                        if (result && typeof result.then === 'function') {
+                            result.then(() => console.log('Speech system reset'));
+                        }
+                    }, 1000);
+                    console.log('Speech system reset initiated');
                 } catch (recoveryError) {
-                    console.error('❌ Speech recovery failed:', recoveryError);
+                    console.error('Speech recovery failed:', recoveryError);
                 }
             }
         }
@@ -323,7 +300,7 @@
 
     // Shutdown all systems gracefully
     function shutdownAllSystems() {
-        console.log('🛑 Shutting down all systems...');
+        console.log('Shutting down all systems...');
         
         try {
             if (systemsReady.speech && window.speechModule) {
@@ -334,19 +311,15 @@
                 window.audioModule.cleanup();
             }
             
-            if (systemsReady.serial && window.serialModule) {
-                window.serialModule.disconnect();
-            }
-            
             if (systemsReady.ai && window.aiModule) {
                 window.aiModule.stop();
             }
             
             logStatus('All systems shutdown');
-            console.log('✅ Shutdown complete');
+            console.log('Shutdown complete');
             
         } catch (error) {
-            console.error('❌ Error during shutdown:', error);
+            console.error('Error during shutdown:', error);
         }
     }
 
@@ -362,7 +335,7 @@
         const healthPercentage = Math.round((healthyCount / totalSystems) * 100);
         
         if (healthPercentage < 50) {
-            console.warn('⚠️ System health critical:', healthPercentage + '%');
+            console.warn('System health critical:', healthPercentage + '%');
             logStatus(`System health: ${healthPercentage}% - Some features unavailable`);
         }
     }
@@ -371,19 +344,18 @@
     function logPerformanceStats() {
         const uptime = Math.round((Date.now() - performanceStats.startTime) / 1000);
         
-        console.log('📊 Performance Stats:', {
+        console.log('Performance Stats:', {
             uptime: uptime + 's',
             speechEvents: performanceStats.speechEvents,
             directionEvents: performanceStats.directionEvents,
             topicUpdates: performanceStats.topicUpdates,
-            arduinoCommands: performanceStats.arduinoCommands,
             errors: performanceStats.errors
         });
     }
 
     // Log system status
     function logSystemStatus() {
-        console.log('🔍 System Status:', systemsReady);
+        console.log('System Status:', systemsReady);
         
         const readySystems = Object.entries(systemsReady)
             .filter(([, ready]) => ready)
@@ -397,7 +369,7 @@
         if (window.updateStatusText) {
             window.updateStatusText(message);
         }
-        console.log('📱 Status:', message);
+        console.log('Status:', message);
     }
 
     // Get comprehensive system status
@@ -420,10 +392,6 @@
             status.systems.audio = window.audioModule.getStatus();
         }
         
-        if (systemsReady.serial && window.serialModule) {
-            status.systems.serial = window.serialModule.getStatus();
-        }
-        
         if (systemsReady.ai && window.aiModule) {
             status.systems.ai = window.aiModule.getStatus();
         }
@@ -443,7 +411,7 @@
 
     // Auto-initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🎮 AR Manager Module Loaded');
+        console.log('AR Manager Module Loaded');
         
         // Small delay to ensure all modules are loaded
         setTimeout(initializeARManager, 500);
@@ -454,6 +422,6 @@
         shutdownAllSystems();
     });
 
-    console.log('✅ ClearPath AR Manager Module Ready');
+    console.log('ClearPath AR Manager Module Ready');
 
 })();

@@ -45,17 +45,17 @@
     // Initialize audio direction detection
     async function initAudioDirection() {
         try {
-            console.log('🎧 Initializing audio direction detection...');
+            console.log('Initializing LIVE audio direction detection (microphone required)...');
             
             // Check for required APIs
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                console.error('❌ getUserMedia not supported');
-                updateStatus('Audio API not supported');
+                console.error('getUserMedia not supported');
+                updateStatus('ERROR: Audio API not supported on this browser');
                 return false;
             }
 
             // Request microphone access
-            updateStatus('Requesting microphone access...');
+            updateStatus('Requesting microphone access for audio direction...');
             mediaStream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: false,
@@ -66,7 +66,7 @@
                 video: false
             });
 
-            console.log('🎤 Microphone access granted');
+            console.log('Microphone access granted for audio direction');
             
             // Set up audio context
             audioContext = new (window.AudioContext || window.webkitAudioContext)({
@@ -76,12 +76,12 @@
             // Create audio processing chain
             setupAudioProcessingChain();
 
-            updateStatus('Audio direction detection ready');
-            console.log('✅ Audio direction detection initialized');
+            updateStatus('Live audio direction detection ready');
+            console.log('Audio direction detection initialized with real microphone');
             return true;
 
         } catch (error) {
-            console.error('❌ Error initializing audio direction:', error);
+            console.error('Error initializing audio direction:', error);
             
             if (error.name === 'NotAllowedError') {
                 updateStatus('Microphone permission denied');
@@ -124,14 +124,14 @@
         leftBuffer = new Uint8Array(leftAnalyser.frequencyBinCount);
         rightBuffer = new Uint8Array(rightAnalyser.frequencyBinCount);
 
-        console.log('🎵 Audio processing chain configured');
-        console.log('📊 FFT Size:', config.fftSize, 'Buffer Size:', leftAnalyser.frequencyBinCount);
+        console.log('Audio processing chain configured');
+        console.log('FFT Size:', config.fftSize, 'Buffer Size:', leftAnalyser.frequencyBinCount);
     }
 
     // Start audio direction monitoring
     function startAudioDirection() {
         if (!audioContext || !leftAnalyser || !rightAnalyser) {
-            console.error('❌ Audio not initialized');
+            console.error('Audio not initialized');
             return false;
         }
 
@@ -143,7 +143,7 @@
         analyzeAudio();
         
         updateStatus('Monitoring audio direction...');
-        console.log('🎧 Audio direction monitoring started');
+        console.log('Audio direction monitoring started');
         return true;
     }
 
@@ -157,7 +157,7 @@
         }
 
         updateStatus('Audio direction monitoring stopped');
-        console.log('🔇 Audio direction monitoring stopped');
+        console.log('Audio direction monitoring stopped');
     }
 
     // Main audio analysis loop
@@ -225,7 +225,7 @@
 
         // Log audio levels for debugging (throttled)
         if (currentTime % 1000 < 50) { // Log roughly every second
-            console.log(`🎵 Audio 360° - L: ${leftVolume.toFixed(3)}, R: ${rightVolume.toFixed(3)}, Total: ${totalVolume.toFixed(3)}`);
+            console.log(`Audio 360° - L: ${leftVolume.toFixed(3)}, R: ${rightVolume.toFixed(3)}, Total: ${totalVolume.toFixed(3)}`);
         }
     }
 
@@ -240,11 +240,14 @@
         if (currentVolume > recentAverage + config.environmentalSoundThreshold && 
             currentVolume > config.volumeThreshold) {
             
-            console.log('🔊 Environmental sound detected:', currentVolume, 'vs avg:', recentAverage);
+            console.log('Environmental sound detected:', currentVolume, 'vs avg:', recentAverage);
             
-            // Trigger environmental sound notification
-            if (window.serialModule) {
-                window.serialModule.notifyEnvironmentalSound();
+            // Send to bridge for iPhone haptic (double warning notification, orange flash)
+            if (window.bridgeModule && window.bridgeModule.isConnected()) {
+                window.bridgeModule.notifyEnvironmental({
+                    volume: currentVolume,
+                    average: recentAverage
+                });
             }
         }
     }
@@ -376,31 +379,31 @@
 
     // Trigger 360-degree directional glow in AR view
     function trigger360DirectionalGlow(angle, intensity, soundType) {
-        console.log(`🎯 360° Sound: ${Math.round(angle)}° (${intensity.toFixed(3)}, ${soundType})`);
+        console.log(`360° Sound: ${Math.round(angle)}° (${intensity.toFixed(3)}, ${soundType})`);
         
         // Trigger AR glow with angle and intensity
         if (window.triggerDirectionalGlow) {
             window.triggerDirectionalGlow(angle, intensity, config.glowDuration, soundType);
         }
 
-        // Notify Arduino wristband with enhanced directional info
-        if (window.serialModule) {
-            // Map 360-degree angle to Arduino directional commands
-            if ((angle >= 315 && angle <= 360) || (angle >= 0 && angle < 45)) {
-                window.serialModule.sendCommand('DIRECTION_NORTH');
-            } else if (angle >= 45 && angle < 135) {
-                window.serialModule.sendCommand('DIRECTION_EAST');
-            } else if (angle >= 135 && angle < 225) {
-                window.serialModule.sendCommand('DIRECTION_SOUTH');
-            } else if (angle >= 225 && angle < 315) {
-                window.serialModule.sendCommand('DIRECTION_WEST');
+        // Send directional info to bridge for iPhone haptics
+        if (angle >= 270 || angle < 90) {
+            // Send to bridge for iPhone haptic (triple light impact, red flash)
+            if (window.bridgeModule && window.bridgeModule.isConnected()) {
+                window.bridgeModule.notifyLeftSound({
+                    angle: angle,
+                    intensity: intensity,
+                    soundType: soundType
+                });
             }
-            
-            // Also send the traditional left/right for backward compatibility
-            if (angle >= 270 || angle < 90) {
-                window.serialModule.notifyDirectionLeft();
-            } else {
-                window.serialModule.notifyDirectionRight();
+        } else {
+            // Send to bridge for iPhone haptic (single heavy impact, green flash)
+            if (window.bridgeModule && window.bridgeModule.isConnected()) {
+                window.bridgeModule.notifyRightSound({
+                    angle: angle,
+                    intensity: intensity,
+                    soundType: soundType
+                });
             }
         }
 
@@ -438,7 +441,7 @@
             audioContext = null;
         }
 
-        console.log('🧹 Audio direction cleanup complete');
+        console.log('Audio direction cleanup complete');
     }
 
     // Update status display
@@ -479,7 +482,7 @@
 
     // Auto-initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🎧 Audio Direction Module Loaded');
+        console.log('Audio Direction Module Loaded');
         updateStatus('Ready');
     });
 
@@ -488,6 +491,6 @@
         cleanup();
     });
 
-    console.log('✅ ClearPath Audio Direction Module Ready');
+    console.log('ClearPath Audio Direction Module Ready');
 
 })();

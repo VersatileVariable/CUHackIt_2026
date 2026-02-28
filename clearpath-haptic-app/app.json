@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "ClearPath Haptic Belt",
+    "slug": "clearpath-haptic-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.clearpath.haptic",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "This app needs to connect to your laptop's WebSocket bridge server on the local network to receive haptic feedback events from your Quest 3 AR headset."
+      }
+    },
+    "android": {
+      "package": "com.clearpath.haptic"
+    }
+  }
+}

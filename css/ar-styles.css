@@ -10,13 +10,27 @@ body {
     margin: 0;
     padding: 0;
     background: transparent;
-    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* AR Active State */
 body.ar-active {
     background: transparent !important;
+}
+
+/* Ensure controls stay visible and interactive in AR mode */
+body.ar-active .ar-controls {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: rgba(15, 23, 42, 0.98) !important;
+    border: 2px solid rgba(16, 185, 129, 0.6) !important;
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.3) !important;
+    z-index: 999999 !important;
+    pointer-events: auto !important;
 }
 
 /* ===== A-FRAME SCENE CONTAINER ===== */
@@ -26,130 +40,191 @@ a-scene {
     background: transparent !important;
 }
 
+/* Ensure canvas is transparent for Quest passthrough */
+a-scene canvas {
+    background: transparent !important;
+}
+
+/* Force transparency in WebXR mode */
+.a-canvas {
+    background-color: transparent !important;
+}
+
 /* Remove A-Frame UI elements that interfere with AR */
 .a-enter-vr {
     position: fixed !important;
-    bottom: 20px !important;
-    right: 20px !important;
+    bottom: 24px !important;
+    right: 24px !important;
     z-index: 999999 !important;
-    background: rgba(0, 100, 200, 0.9) !important;
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
     color: white !important;
-    border: none !important;
-    padding: 12px 24px !important;
-    border-radius: 8px !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+    padding: 14px 28px !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3) !important;
     backdrop-filter: blur(10px) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .a-enter-vr:hover {
-    background: rgba(0, 120, 240, 1) !important;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+    box-shadow: 0 8px 28px rgba(16, 185, 129, 0.45) !important;
 }
 
 /* ===== AR CONTROL PANEL ===== */
 .ar-controls {
     position: fixed;
-    top: 20px;
-    left: 20px;
+    top: 10px;
+    left: 10px;
     z-index: 1000;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(15px);
-    border-radius: 12px;
-    padding: 20px;
-    min-width: 280px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 12px;
+    min-width: 200px;
+    max-width: 220px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(16, 185, 129, 0.4);
+    pointer-events: auto;
+}
+
+/* Control Panel Header */
+.control-header {
+    font-size: 13px;
+    font-weight: 700;
+    color: #10B981;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.3);
+    text-align: center;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 /* AR Control Buttons */
 .ar-button {
     display: block;
     width: 100%;
-    margin-bottom: 12px;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    background: rgba(71, 85, 105, 0.6);
     color: white;
-    border: none;
+    pointer-events: auto;
+    border: 1px solid rgba(148, 163, 184, 0.3);
     border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.ar-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.ar-button:hover::before {
+    opacity: 1;
 }
 
 .ar-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.5);
-    background: linear-gradient(135deg, #5B52F0 0%, #8B5CF6 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    border-color: rgba(148, 163, 184, 0.5);
 }
 
 .ar-button:active {
     transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Button Type Styles */
+/* VR Button - Primary Action */
+.vr-btn {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    font-size: 13px;
+    padding: 12px 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.vr-btn:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    border-color: rgba(16, 185, 129, 0.5);
+}
+
+/* Speech Button */
 .speech-btn {
-    background: linear-gradient(135deg, #059669 0%, #10B981 100%);
-    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #86EFAC;
 }
 
 .speech-btn:hover {
-    background: linear-gradient(135deg, #047857 0%, #0D9488 100%);
-    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.5);
+    background: rgba(34, 197, 94, 0.25);
+    border-color: rgba(34, 197, 94, 0.5);
+    color: #D1FAE5;
 }
 
-.hardware-btn {
-    background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
-    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
-}
-
-.hardware-btn:hover {
-    background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%);
-    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.5);
-}
-
+/* Audio Direction Button */
 .audio-btn {
-    background: linear-gradient(135deg, #7C2D12 0%, #EA580C 100%);
-    box-shadow: 0 2px 8px rgba(124, 45, 18, 0.3);
+    background: rgba(249, 115, 22, 0.15);
+    border-color: rgba(249, 115, 22, 0.3);
+    color: #FDBA74;
 }
 
 .audio-btn:hover {
-    background: linear-gradient(135deg, #9A3412 0%, #F97316 100%);
-    box-shadow: 0 4px 16px rgba(124, 45, 18, 0.5);
+    background: rgba(249, 115, 22, 0.25);
+    border-color: rgba(249, 115, 22, 0.5);
+    color: #FED7AA;
 }
 
+/* AI Button */
 .ai-btn {
-    background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
-    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #93C5FD;
 }
 
 .ai-btn:hover {
-    background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);
-    box-shadow: 0 4px 16px rgba(30, 64, 175, 0.5);
+    background: rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #DBEAFE;
+}
+
+/* Test Button - Subtle */
+.test-btn {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.2);
+    color: rgba(196, 181, 253, 0.7);
+    font-size: 11px;
+    padding: 8px 12px;
+}
+
+.test-btn:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: #C4B5FD;
 }
 
 /* Status Panel */
 .status-panel {
-    background: rgba(17, 24, 39, 0.9);
-    border-radius: 8px;
-    padding: 16px;
-    margin-top: 16px;
-    border: 1px solid rgba(75, 85, 99, 0.5);
-}
-
-.status-item {
-    font-size: 12px;
-    color: #D1D5DB;
-    margin-bottom: 8px;
-    padding: 4px 8px;
-    background: rgba(55, 65, 81, 0.5);
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-}
+    background: rgba(0, 0, 0, 0.5);\n    border-radius: 6px;\n    padding: 8px;\n    margin-top: 8px;\n    border: 1px solid rgba(71, 85, 105, 0.4);\n    pointer-events: auto;\n}\n\n.status-item {\n    font-size: 9px;\n    color: #CBD5E1;\n    margin-bottom: 4px;\n    padding: 4px 6px;\n    background: rgba(30, 41, 59, 0.6);\n    border-radius: 4px;\n    font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;\n    border-left: 2px solid rgba(100, 116, 139, 0.5);\n    line-height: 1.3;\n}
 
 .status-item:last-child {
     margin-bottom: 0;
@@ -157,13 +232,21 @@ a-scene {
 
 /* Status Colors */
 .status-item.active {
-    color: #10B981;
-    background: rgba(16, 185, 129, 0.1);
+    color: #6EE7B7;
+    background: rgba(16, 185, 129, 0.12);
+    border-left-color: #10B981;
 }
 
 .status-item.error {
-    color: #EF4444;
-    background: rgba(239, 68, 68, 0.1);
+    color: #FCA5A5;
+    background: rgba(239, 68, 68, 0.12);
+    border-left-color: #EF4444;
+}
+
+.status-item.warning {
+    color: #FCD34D;
+    background: rgba(245, 158, 11, 0.12);
+    border-left-color: #F59E0B;
 }
 
 /* ===== AR TYPOGRAPHY SYSTEM ===== */
