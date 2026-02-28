@@ -190,10 +190,9 @@
         return sum / buffer.length / 255; // Normalize to 0-1
     }
 
-    // Analyze direction and trigger appropriate responses
+    // Analyze 360-degree direction and trigger appropriate responses
     function analyzeDirectionAndVolume(leftVolume, rightVolume) {
         const totalVolume = (leftVolume + rightVolume) / 2;
-        const volumeDifference = Math.abs(leftVolume - rightVolume);
         const currentTime = Date.now();
         
         // Add to volume history for trend analysis
@@ -207,22 +206,15 @@
 
         // Only process directional detection if volume is above threshold
         if (totalVolume > config.volumeThreshold && 
-            volumeDifference > config.directionThreshold &&
             currentTime - lastTriggerTime > config.triggerCooldown) {
             
-            // Determine direction based on volume difference
-            let detectedDirection = null;
+            // Calculate 360-degree direction using advanced stereo analysis
+            const directionData = calculate360Direction(leftVolume, rightVolume, leftBuffer, rightBuffer);
             
-            if (leftVolume > rightVolume + config.directionThreshold) {
-                detectedDirection = 'left';
-            } else if (rightVolume > leftVolume + config.directionThreshold) {
-                detectedDirection = 'right';
-            }
-
-            if (detectedDirection && detectedDirection !== currentDirection) {
-                triggerDirectionalGlow(detectedDirection, leftVolume, rightVolume);
+            if (directionData && directionData.confidence > 0.6) {
+                trigger360DirectionalGlow(directionData.angle, directionData.intensity, directionData.soundType);
                 lastTriggerTime = currentTime;
-                currentDirection = detectedDirection;
+                currentDirection = directionData.angle;
                 
                 // Reset direction after cooldown
                 setTimeout(() => {
@@ -233,7 +225,7 @@
 
         // Log audio levels for debugging (throttled)
         if (currentTime % 1000 < 50) { // Log roughly every second
-            console.log(`🎵 Audio levels - Left: ${leftVolume.toFixed(3)}, Right: ${rightVolume.toFixed(3)}, Total: ${totalVolume.toFixed(3)}`);
+            console.log(`🎵 Audio 360° - L: ${leftVolume.toFixed(3)}, R: ${rightVolume.toFixed(3)}, Total: ${totalVolume.toFixed(3)}`);
         }
     }
 
@@ -257,27 +249,162 @@
         }
     }
 
-    // Trigger directional glow in AR view
-    function triggerDirectionalGlow(direction, leftVol, rightVol) {
-        const intensity = Math.max(leftVol, rightVol);
+    // Calculate 360-degree direction using advanced stereo analysis
+    function calculate360Direction(leftVolume, rightVolume, leftFreqData, rightFreqData) {
+        // Calculate basic left/right positioning (-90 to +90 degrees)
+        const volumeDifference = rightVolume - leftVolume;
+        const maxVolume = Math.max(leftVolume, rightVolume);
         
-        console.log(`🎯 Direction detected: ${direction} (L:${leftVol.toFixed(3)}, R:${rightVol.toFixed(3)})`);
+        // Base angle calculation using volume differences
+        let baseAngle = 0;
+        if (Math.abs(volumeDifference) > config.directionThreshold) {
+            // Map volume difference to angle (-90 to +90 degrees)
+            baseAngle = Math.atan2(volumeDifference, maxVolume) * (180 / Math.PI) * 2;
+            baseAngle = Math.max(-90, Math.min(90, baseAngle));
+        }
         
-        // Trigger AR glow
+        // Enhance with frequency analysis for front/back discrimination
+        const frontBackFactor = analyzeFrequencyContent(leftFreqData, rightFreqData);
+        
+        // Convert to 360-degree system (0 = North, 90 = East, 180 = South, 270 = West)
+        let finalAngle = 0;
+        
+        if (frontBackFactor > 0.3) {
+            // Sound is likely in front (0-180 degrees)
+            if (baseAngle >= 0) {
+                finalAngle = 90 + baseAngle; // Right front quadrant (90-180)
+            } else {
+                finalAngle = 90 + baseAngle; // Left front quadrant (0-90)
+            }
+        } else {
+            // Sound is likely behind (180-360 degrees)
+            if (baseAngle >= 0) {
+                finalAngle = 270 - baseAngle; // Right back quadrant (270-360/0)
+            } else {
+                finalAngle = 270 - baseAngle; // Left back quadrant (180-270)
+            }
+        }
+        
+        // Normalize angle to 0-360 degrees
+        finalAngle = ((finalAngle % 360) + 360) % 360;
+        
+        // Calculate confidence based on volume levels and consistency
+        const confidence = Math.min(1.0, maxVolume / config.volumeThreshold);
+        
+        // Determine sound type based on frequency content
+        const soundType = classifySoundType(leftFreqData, rightFreqData);
+        
+        // Calculate intensity (higher for closer/louder sounds)
+        const intensity = Math.min(1.0, maxVolume * 1.2);
+        
+        return {
+            angle: finalAngle,
+            intensity: intensity,
+            confidence: confidence,
+            soundType: soundType,
+            leftVolume: leftVolume,
+            rightVolume: rightVolume
+        };
+    }
+
+    // Analyze frequency content to determine front/back positioning
+    function analyzeFrequencyContent(leftFreqData, rightFreqData) {
+        // High frequency attenuation suggests sound is behind
+        let highFreqL = 0, midFreqL = 0, lowFreqL = 0;
+        let highFreqR = 0, midFreqR = 0, lowFreqR = 0;
+        
+        const third = leftFreqData.length / 3;
+        
+        // Analyze frequency bands
+        for (let i = 0; i < leftFreqData.length; i++) {
+            if (i < third) {
+                lowFreqL += leftFreqData[i];
+                lowFreqR += rightFreqData[i];
+            } else if (i < third * 2) {
+                midFreqL += leftFreqData[i];
+                midFreqR += rightFreqData[i];
+            } else {
+                highFreqL += leftFreqData[i];
+                highFreqR += rightFreqData[i];
+            }
+        }
+        
+        // Calculate ratios
+        const totalL = highFreqL + midFreqL + lowFreqL;
+        const totalR = highFreqR + midFreqR + lowFreqR;
+        
+        if (totalL === 0 || totalR === 0) return 0.5; // Neutral
+        
+        const highRatioL = highFreqL / totalL;
+        const highRatioR = highFreqR / totalR;
+        const avgHighRatio = (highRatioL + highRatioR) / 2;
+        
+        // Higher high-frequency content suggests front-facing sound
+        return avgHighRatio;
+    }
+
+    // Classify sound type based on frequency characteristics
+    function classifySoundType(leftFreqData, rightFreqData) {
+        const avgData = new Float32Array(leftFreqData.length);
+        for (let i = 0; i < leftFreqData.length; i++) {
+            avgData[i] = (leftFreqData[i] + rightFreqData[i]) / 2;
+        }
+        
+        // Calculate frequency band energies
+        const lowEnergy = avgData.slice(0, 8).reduce((a, b) => a + b, 0); // ~0-700 Hz
+        const midEnergy = avgData.slice(8, 24).reduce((a, b) => a + b, 0); // ~700-2100 Hz  
+        const highEnergy = avgData.slice(24, 64).reduce((a, b) => a + b, 0); // ~2100-5600 Hz
+        const totalEnergy = lowEnergy + midEnergy + highEnergy;
+        
+        if (totalEnergy === 0) return 'silence';
+        
+        const lowRatio = lowEnergy / totalEnergy;
+        const midRatio = midEnergy / totalEnergy;
+        const highRatio = highEnergy / totalEnergy;
+        
+        // Classify based on frequency distribution
+        if (midRatio > 0.5 && highRatio > 0.25) {
+            return 'speech';
+        } else if (lowRatio > 0.6) {
+            return 'mechanical';
+        } else if (highRatio > 0.4) {
+            return 'environmental';
+        } else {
+            return 'general';
+        }
+    }
+
+    // Trigger 360-degree directional glow in AR view
+    function trigger360DirectionalGlow(angle, intensity, soundType) {
+        console.log(`🎯 360° Sound: ${Math.round(angle)}° (${intensity.toFixed(3)}, ${soundType})`);
+        
+        // Trigger AR glow with angle and intensity
         if (window.triggerDirectionalGlow) {
-            window.triggerDirectionalGlow(direction, intensity, config.glowDuration);
+            window.triggerDirectionalGlow(angle, intensity, config.glowDuration, soundType);
         }
 
-        // Notify Arduino wristband
+        // Notify Arduino wristband with enhanced directional info
         if (window.serialModule) {
-            if (direction === 'left') {
+            // Map 360-degree angle to Arduino directional commands
+            if ((angle >= 315 && angle <= 360) || (angle >= 0 && angle < 45)) {
+                window.serialModule.sendCommand('DIRECTION_NORTH');
+            } else if (angle >= 45 && angle < 135) {
+                window.serialModule.sendCommand('DIRECTION_EAST');
+            } else if (angle >= 135 && angle < 225) {
+                window.serialModule.sendCommand('DIRECTION_SOUTH');
+            } else if (angle >= 225 && angle < 315) {
+                window.serialModule.sendCommand('DIRECTION_WEST');
+            }
+            
+            // Also send the traditional left/right for backward compatibility
+            if (angle >= 270 || angle < 90) {
                 window.serialModule.notifyDirectionLeft();
-            } else if (direction === 'right') {
+            } else {
                 window.serialModule.notifyDirectionRight();
             }
         }
 
-        updateStatus(`Sound from ${direction} detected`);
+        updateStatus(`${soundType} sound from ${Math.round(angle)}°`);
     }
 
     // Toggle audio direction detection

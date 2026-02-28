@@ -17,10 +17,14 @@
   Commands from Browser:
   - SPEECH_START: Begin speech recognition
   - SPEECH_END: End speech recognition  
-  - SPEECH_DETECTED: Speech was detected
+  - SPEECH_DETECTED: Speech was heard and processed
   - ENVIRONMENTAL_SOUND: Environmental sound detected
-  - DIRECTION_LEFT: Sound from left direction
-  - DIRECTION_RIGHT: Sound from right direction
+  - DIRECTION_LEFT: Sound from left (legacy - 270-90 degrees)
+  - DIRECTION_RIGHT: Sound from right (legacy - 90-270 degrees)
+  - DIRECTION_NORTH: Sound from north (315-45 degrees)
+  - DIRECTION_EAST: Sound from east (45-135 degrees)
+  - DIRECTION_SOUTH: Sound from south (135-225 degrees)
+  - DIRECTION_WEST: Sound from west (225-315 degrees)
   - STATUS_CHECK: Request status update
   - RESET: Reset system
   
@@ -130,6 +134,18 @@ void processCommand(String command) {
   } else if (command == "DIRECTION_RIGHT") {
     directionRightPattern();
     
+  } else if (command == "DIRECTION_NORTH") {
+    directionNorthPattern();
+    
+  } else if (command == "DIRECTION_EAST") {
+    directionEastPattern();
+    
+  } else if (command == "DIRECTION_SOUTH") {
+    directionSouthPattern();
+    
+  } else if (command == "DIRECTION_WEST") {
+    directionWestPattern();
+    
   } else if (command == "STATUS_CHECK") {
     statusCheck();
     
@@ -223,6 +239,65 @@ void directionRightPattern() {
   setLEDColor(COLOR_OFF);
   
   Serial.println("Sound from right direction");
+}
+
+// 360-DEGREE DIRECTIONAL PATTERNS
+
+void directionNorthPattern() {
+  // North pattern: single long pulse with cyan LED
+  setLEDColor(COLOR_CYAN);
+  
+  buzzerPulse(LONG_PULSE);
+  
+  delay(300);
+  setLEDColor(COLOR_OFF);
+  
+  Serial.println("Sound from north direction (0-45°)");
+}
+
+void directionEastPattern() {
+  // East pattern: two medium pulses with green LED  
+  setLEDColor(COLOR_GREEN);
+  
+  buzzerPulse(200);
+  delay(PAUSE_SHORT);
+  buzzerPulse(200);
+  
+  delay(300);
+  setLEDColor(COLOR_OFF);
+  
+  Serial.println("Sound from east direction (45-135°)");
+}
+
+void directionSouthPattern() {
+  // South pattern: three short pulses with yellow LED
+  setLEDColor(COLOR_YELLOW);
+  
+  for (int i = 0; i < 3; i++) {
+    buzzerPulse(SHORT_PULSE);
+    delay(PAUSE_SHORT);
+  }
+  
+  delay(300);
+  setLEDColor(COLOR_OFF);
+  
+  Serial.println("Sound from south direction (135-225°)");
+}
+
+void directionWestPattern() {
+  // West pattern: long-short-short with red LED
+  setLEDColor(COLOR_RED);
+  
+  buzzerPulse(LONG_PULSE);
+  delay(PAUSE_SHORT);
+  buzzerPulse(SHORT_PULSE);
+  delay(PAUSE_SHORT);
+  buzzerPulse(SHORT_PULSE);
+  
+  delay(300);
+  setLEDColor(COLOR_OFF);
+  
+  Serial.println("Sound from west direction (225-315°)");
 }
 
 void errorPattern() {
@@ -398,8 +473,12 @@ void customPattern(String patternCode) {
   - SPEECH_END: User stopped voice recognition
   - SPEECH_DETECTED: Speech was heard and processed
   - ENVIRONMENTAL_SOUND: Background noise detected
-  - DIRECTION_LEFT: Sound source identified on left
-  - DIRECTION_RIGHT: Sound source identified on right
+  - DIRECTION_LEFT: Sound source on left (legacy compatibility)
+  - DIRECTION_RIGHT: Sound source on right (legacy compatibility)
+  - DIRECTION_NORTH: 360° Sound from north (315-45°, front-facing)
+  - DIRECTION_EAST: 360° Sound from east (45-135°, right side)
+  - DIRECTION_SOUTH: 360° Sound from south (135-225°, behind user)
+  - DIRECTION_WEST: 360° Sound from west (225-315°, left side)
   - STATUS_CHECK: Request current system status
   - RESET: Reset wristband to initial state
   
