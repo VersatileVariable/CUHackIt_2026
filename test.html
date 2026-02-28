@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClearPath AR - System Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f7fa;
+        }
+
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .test-button {
+            background: #4F46E5;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 8px;
+            transition: background 0.3s;
+        }
+
+        .test-button:hover {
+            background: #3730A3;
+        }
+
+        .test-result {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .success {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+
+        .error {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+        }
+
+        .info {
+            background: #DBEAFE;
+            color: #1E40AF;
+            border: 1px solid #93C5FD;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-red { background: #EF4444; }
+        .status-green { background: #10B981; }
+        .status-yellow { background: #F59E0B; }
+
+        code {
+            background: #F3F4F6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 ClearPath AR System Test</h1>
+        <p>Verify all components before Meta Quest 3 deployment</p>
+    </div>
+
+    <!-- WebXR Support Test -->
+    <div class="test-section">
+        <h3>🥽 WebXR Support Test</h3>
+        <p>Check if this browser supports WebXR AR features</p>
+        <button class="test-button" onclick="testWebXR()">Test WebXR Support</button>
+        <div id="webxr-result" class="test-result"></div>
+    </div>
+
+    <!-- Web Speech API Test -->
+    <div class="test-section">
+        <h3>🎙️ Speech Recognition Test</h3>
+        <p>Test Web Speech API functionality</p>
+        <button class="test-button" onclick="testSpeech()">Test Speech Recognition</button>
+        <button class="test-button" onclick="stopSpeech()">Stop</button>
+        <div id="speech-result" class="test-result"></div>
+        <div id="speech-output" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
+
+    <!-- Web Serial API Test -->
+    <div class="test-section">
+        <h3>🔌 Arduino Serial Test</h3>
+        <p>Test Web Serial API for Arduino communication</p>
+        <button class="test-button" onclick="testSerial()">Connect Arduino</button>
+        <button class="test-button" onclick="sendTestCommand()">Send Test Command</button>
+        <div id="serial-result" class="test-result"></div>
+    </div>
+
+    <!-- Audio Test -->
+    <div class="test-section">
+        <h3>🔊 Audio Direction Test</h3>
+        <p>Test microphone access and audio processing</p>
+        <button class="test-button" onclick="testAudio()">Test Audio Access</button>
+        <div id="audio-result" class="test-result"></div>
+    </div>
+
+    <!-- Camera Test -->
+    <div class="test-section">
+        <h3>📹 Camera Test</h3>
+        <p>Test camera access for AR passthrough</p>
+        <button class="test-button" onclick="testCamera()">Test Camera Access</button>
+        <div id="camera-result" class="test-result"></div>
+        <video id="camera-preview" style="max-width: 100%; display: none; margin-top: 15px;"></video>
+    </div>
+
+    <!-- Network Test -->
+    <div class="test-section">
+        <h3>🌐 Network & Assets Test</h3>
+        <p>Test if all ClearPath assets load properly</p>
+        <button class="test-button" onclick="testAssets()">Test Asset Loading</button>
+        <div id="assets-result" class="test-result"></div>
+    </div>
+
+    <!-- Quick Launch -->
+    <div class="test-section">
+        <h3>🚀 Quick Launch</h3>
+        <p>Jump directly to ClearPath AR components</p>
+        <button class="test-button" onclick="location.href='setup.html'">Open Setup Page</button>
+        <button class="test-button" onclick="location.href='index.html'">Launch AR App</button>
+    </div>
+
+    <script>
+        let speechRecognition = null;
+        let serialPort = null;
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `test-result ${type}`;
+            element.innerHTML = `<span class="status-indicator status-${type === 'success' ? 'green' : type === 'error' ? 'red' : 'yellow'}"></span>${message}`;
+            element.style.display = 'block';
+        }
+
+        async function testWebXR() {
+            try {
+                if ('xr' in navigator) {
+                    const supported = await navigator.xr.isSessionSupported('immersive-ar');
+                    if (supported) {
+                        showResult('webxr-result', '✅ WebXR AR is supported! Ready for Meta Quest 3.', 'success');
+                    } else {
+                        showResult('webxr-result', '⚠️ WebXR detected but AR mode not supported. May work on Meta Quest 3.', 'info');
+                    }
+                } else {
+                    showResult('webxr-result', '❌ WebXR not supported in this browser. Use Meta Quest 3 browser.', 'error');
+                }
+            } catch (error) {
+                showResult('webxr-result', `❌ WebXR test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSpeech() {
+            try {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    speechRecognition = new SpeechRecognition();
+                    
+                    speechRecognition.continuous = true;
+                    speechRecognition.interimResults = true;
+                    speechRecognition.lang = 'en-US';
+                    
+                    speechRecognition.onstart = () => {
+                        showResult('speech-result', '✅ Speech recognition started! Say something...', 'success');
+                        document.getElementById('speech-output').textContent = 'Listening...';
+                    };
+                    
+                    speechRecognition.onresult = (event) => {
+                        let transcript = '';
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            transcript += event.results[i][0].transcript;
+                        }
+                        document.getElementById('speech-output').textContent = `"${transcript}"`;
+                    };
+                    
+                    speechRecognition.onerror = (event) => {
+                        showResult('speech-result', `❌ Speech recognition error: ${event.error}`, 'error');
+                    };
+                    
+                    speechRecognition.start();
+                } else {
+                    showResult('speech-result', '❌ Web Speech API not supported in this browser.', 'error');
+                }
+            } catch (error) {
+                showResult('speech-result', `❌ Speech test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function stopSpeech() {
+            if (speechRecognition) {
+                speechRecognition.stop();
+                showResult('speech-result', '⏹️ Speech recognition stopped.', 'info');
+                document.getElementById('speech-output').textContent = '';
+            }
+        }
+
+        async function testSerial() {
+            try {
+                if ('serial' in navigator) {
+                    const port = await navigator.serial.requestPort();
+                    await port.open({ baudRate: 9600 });
+                    serialPort = port;
+                    showResult('serial-result', '✅ Arduino connected successfully!', 'success');
+                } else {
+                    showResult('serial-result', '❌ Web Serial API not supported. Enable chrome://flags/#enable-web-serial', 'error');
+                }
+            } catch (error) {
+                showResult('serial-result', `❌ Serial connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function sendTestCommand() {
+            if (!serialPort) {
+                showResult('serial-result', '❌ Connect to Arduino first!', 'error');
+                return;
+            }
+
+            try {
+                const writer = serialPort.writable.getWriter();
+                const data = new TextEncoder().encode('STATUS_CHECK\\n');
+                await writer.write(data);
+                writer.releaseLock();
+                showResult('serial-result', '✅ Test command sent to Arduino! Check serial monitor for response.', 'success');
+            } catch (error) {
+                showResult('serial-result', `❌ Failed to send command: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAudio() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                showResult('audio-result', '✅ Microphone access granted! Audio direction detection ready.', 'success');
+                // Stop the stream
+                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                showResult('audio-result', `❌ Microphone access failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const videoElement = document.getElementById('camera-preview');
+                videoElement.srcObject = stream;
+                videoElement.style.display = 'block';
+                videoElement.play();
+                
+                showResult('camera-result', '✅ Camera access granted! AR passthrough ready.', 'success');
+                
+                // Stop after 3 seconds
+                setTimeout(() => {
+                    stream.getTracks().forEach(track => track.stop());
+                    videoElement.style.display = 'none';
+                }, 3000);
+            } catch (error) {
+                showResult('camera-result', `❌ Camera access failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAssets() {
+            const assets = [
+                '/css/ar-styles.css',
+                '/js/speech-recognition.js',
+                '/js/serial-communication.js', 
+                '/js/audio-direction.js',
+                '/js/ai-summarizer.js',
+                '/js/ar-manager.js'
+            ];
+
+            let loadedCount = 0;
+            let failedAssets = [];
+
+            showResult('assets-result', '🔄 Testing asset loading...', 'info');
+
+            for (const asset of assets) {
+                try {
+                    const response = await fetch(asset);
+                    if (response.ok) {
+                        loadedCount++;
+                    } else {
+                        failedAssets.push(asset);
+                    }
+                } catch (error) {
+                    failedAssets.push(asset);
+                }
+            }
+
+            if (failedAssets.length === 0) {
+                showResult('assets-result', `✅ All ${loadedCount} assets loaded successfully!`, 'success');
+            } else {
+                showResult('assets-result', `⚠️ ${loadedCount}/${assets.length} assets loaded. Failed: ${failedAssets.join(', ')}`, 'error');
+            }
+        }
+
+        // Auto-run basic tests when page loads
+        window.addEventListener('load', () => {
+            console.log('🧪 ClearPath AR System Test Page Loaded');
+            
+            // Show current environment info
+            const info = `
+                📱 User Agent: ${navigator.userAgent}
+                🌐 Location: ${window.location.href}
+                ⏰ Timestamp: ${new Date().toISOString()}
+            `;
+            console.log(info);
+        });
+    </script>
+</body>
+</html>
