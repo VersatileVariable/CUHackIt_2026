@@ -6,7 +6,7 @@
 - **1x Arduino UNO R3** + USB cable
 - **1x SG90 Servo Motor** (for haptic feedback)
 - **1x Active Buzzer** (5V, with built-in oscillator)
-- **1x RGB LED** (common cathode, 5mm)
+- **3x Individual LEDs** (1 Red, 1 Green, 1 Blue - two-pronged)
 - **3x 220Ω Resistors** (for LED current limiting)
 - **1x Half-size Breadboard** (for quick setup)
 - **10+ Jumper Wires** (male-to-male)
@@ -55,18 +55,20 @@
                 │      └─────────── Ground Rail
                 └─────────────────── Active Buzzer (+)
 
-    RGB LED (Common Cathode)          SG90 Servo Motor
+    Individual LEDs (Two-Pronged)       SG90 Servo Motor
     ┌─────────────────────┐          ┌──────────────────┐
-    │    ┌─R─[220Ω]─Pin6  │          │ Brown  │ Ground  │
-    │  ┌─┴─G─[220Ω]─Pin5  │          │ Red    │ +5V     │  
-    │ ┌┴──B─[220Ω]─Pin3   │          │ Orange │ Signal  │
-    │ │ │ │               │          └──────────────────┘
-    │[C]│ │               │          
-    │ │ │ │               │          Active Buzzer
-    │ └─┴─┴─── GND        │          ┌──────────────────┐
-    └─────────────────────┘          │   (+) Pin 8     │ 
-                                     │   (-) GND       │
-                                     └──────────────────┘
+    │ Red LED:            │          │ Brown  │ Ground  │
+    │   (+)─[220Ω]─Pin6   │          │ Red    │ +5V     │  
+    │   (-)─────── GND    │          │ Orange │ Signal  │
+    │                     │          └──────────────────┘
+    │ Green LED:          │          
+    │   (+)─[220Ω]─Pin5   │          Active Buzzer
+    │   (-)─────── GND    │          ┌──────────────────┐
+    │                     │          │   (+) Pin 8     │ 
+    │ Blue LED:           │          │   (-) GND       │
+    │   (+)─[220Ω]─Pin3   │          └──────────────────┘
+    │   (-)─────── GND    │          
+    └─────────────────────┘
 ```
 
 ---
@@ -88,7 +90,7 @@
     │                      │                    │ │  a b c d e f g h │ │
     │   Digital I/O Pins   │                    │ │ 1│ │ │ │ │ │ │ │ │ │
     │ 13 12 11 10  9  8  7 │                    │ │ 2│ │ │ │ │ │ │ │ │ │
-    │                      │                    │ │ 3│ │[R][G][B][-] │ │◄─ RGB LED
+    │                      │                    │ │ 3│ │[R][G][B][-] │ │◄─ Individual LEDs
     │  6  5  4  3  2  1  0 │                    │ │ 4│ │ │ │ │ │ │ │ │ │
     │                      │                    │ │ 5│ │ │ │ │ │ │ │ │ │
     │    5V   3.3V   GND   │                    │ │  │ │ │ │ │ │ │ │ │ │
@@ -102,39 +104,47 @@
             │                                │  └────┼─┼─┼─┼─┼─┼─┼─┼───┘
     ┌───────┴────────┐                       │       │ │ │ │ │ │ │ │
     │   SERVO MOTOR  │                       │   Pin9│ │ │ │ │ │ │ │
-    │   [    SG90    ]│                       │   Pin8│ │ │ │ │ │ │ │
+    │  [    SG90    ]│                       │   Pin8│ │ │ │ │ │ │ │
     │    BROWN──┐    │                       │   Pin6│ │ │ │ │ │ │ │
     │    RED────┼────┼───────────────────────┘   Pin5│ │ │ │ │ │ │ │
     │    ORANGE─┼────┼─────────────────────Pin 9 Pin3│ │ │ │ │ │ │ │
-    └───────────┴────┘                           GND│ │ │ │ │ │ │ │
+    └───────────┴────┘                            GND│ │ │ │ │ │ │ │
                                                      │ │ │ │ │ │ │ │
-    ┌─────────────────┐                             │ │ │ │ │ │ │Buzzer(+)
-    │  ACTIVE BUZZER  │                             │ │ │ │ │ │ │ │
-    │    ┌─────────┐  │                             │ │ │ │ │ │ │ │
-    │    │    +    │  │─────────────────────Pin 8──┘ │ │ │ │ │ │ │
-    │    │    -    │  │──────────────────────GND─────┘ │ │ │ │ │ │
-    │    └─────────┘  │                                │ │ │ │ │ │
-    └─────────────────┘                                │ │ │ │Pin6
-                                                       │ │ │Pin5
-                                                       │ │Pin3  
-                                                       │GND
-                                                       │
-                                           ┌───────────┴─────────┐
-                                           │   220Ω RESISTORS    │
-                                           │  [R] [G] [B]        │
-                                           │   │   │   │         │
-                                           └───┼───┼───┼─────────┘
-                                               │   │   │
+      ┌─────────────────┐                            │ │ │ │ │ │ │Buzzer(+)
+      │  ACTIVE BUZZER  │                            │ │ │ │ │ │ │ │
+      │    ┌─────────┐  │                            │ │ │ │ │ │ │ │
+      │    │    +    │  │─────────────────────Pin 8──┘ │ │ │ │ │ │ │
+      │    │    -    │  │──────────────────────GND─────┘ │ │ │ │ │ │
+      │    └─────────┘  │                                │ │ │ │ │ │
+      └─────────────────┘                                │ │ │ │Pin6
+                                                         │ │ │Pin5
+                                                         │ │Pin3  
+                                                         │GND
+                                                         │
+                                             ┌───────────┴─────────┐
+                                             │   220Ω RESISTORS    │
+                                             │  [R] [G] [B]        │
+                                             │   │   │   │         │
+                                             └───┼───┼───┼─────────┘
+                                                 │   │   │
                                     ┌─────────────────────────────┐
-                                    │        RGB LED              │
-                                    │     (Common Cathode)        │
+                                    │     INDIVIDUAL LEDs         │
+                                    │      (Two-Pronged)          │
                                     │                             │
-                                    │  Red(R)──[220Ω]──Pin 6     │
-                                    │ Green(G)─[220Ω]──Pin 5     │
-                                    │ Blue(B)──[220Ω]──Pin 3     │
-                                    │ Cathode(-)───────GND       │
+                                    │ Red LED:                    │
+                                    │   Long leg (+)──[220Ω]──Pin 6│
+                                    │   Short leg (-)─────────GND │
                                     │                             │
-                                    │   Longest leg = Cathode     │
+                                    │ Green LED:                  │
+                                    │   Long leg (+)──[220Ω]──Pin 5│
+                                    │   Short leg (-)─────────GND │
+                                    │                             │
+                                    │ Blue LED:                   │
+                                    │   Long leg (+)──[220Ω]──Pin 3│
+                                    │   Short leg (-)─────────GND │
+                                    │                             │
+                                    │ Note: Long leg = Anode (+)  │
+                                    │       Short leg = Cathode (-) │
                                     └─────────────────────────────┘
 
          COMPONENT PLACEMENT GUIDE:
@@ -143,7 +153,7 @@
          │ 2. Breadboard to the right of Arduino          │  
          │ 3. Servo motor above/beside breadboard         │
          │ 4. Active buzzer near Arduino pins             │
-         │ 5. RGB LED inserted into breadboard center     │
+         │ 5. Individual LEDs inserted into breadboard    │
          │ 6. Jumper wires connect Arduino → Breadboard   │
          │ 7. Keep power/ground wires short & organized   │
          └─────────────────────────────────────────────────┘
@@ -154,7 +164,7 @@
 Arduino UNO R3: 68.6mm × 53.4mm × 15mm
 SG90 Servo:     22.8mm × 12.2mm × 29mm  
 Half Breadboard: 80mm × 60mm × 10mm
-RGB LED:        5mm diameter × 8mm height
+Individual LEDs: 5mm diameter × 8mm height (each)
 Active Buzzer:  12mm diameter × 9.5mm height
 220Ω Resistors: 6mm × 2.5mm (standard 1/4W)
 ```
@@ -211,28 +221,40 @@ Buzzer Connections:
 - Buzzer **+** → Arduino **Pin 8**
 - Buzzer **-** → Breadboard **ground rail**
 
-### Step 4: RGB LED with Current Limiting
+### Step 4: Individual LEDs with Current Limiting
 ```
-RGB LED (Common Cathode):
-├── Longest leg (Cathode): GND
-├── Red leg: 220Ω resistor → Pin 6
-├── Green leg: 220Ω resistor → Pin 5  
-└── Blue leg: 220Ω resistor → Pin 3
+Each LED (Two-Pronged):
+├── Long leg (Anode +): 220Ω resistor → Arduino Pin
+└── Short leg (Cathode -): Arduino GND
+
+LED Connections:
+├── Red LED: Pin 6
+├── Green LED: Pin 5  
+└── Blue LED: Pin 3
 ```
 
 **Wiring Steps:**
-1. **Insert RGB LED** into breadboard (note which leg is longest = cathode)
-2. **Connect cathode** (longest leg) → breadboard ground rail
-3. **Red leg** → 220Ω resistor → Arduino **Pin 6** 
-4. **Green leg** → 220Ω resistor → Arduino **Pin 5**
-5. **Blue leg** → 220Ω resistor → Arduino **Pin 3**
+1. **Insert Red LED** into breadboard
+   - Long leg (anode +) → 220Ω resistor → Arduino **Pin 6**
+   - Short leg (cathode -) → breadboard ground rail
+2. **Insert Green LED** into breadboard
+   - Long leg (anode +) → 220Ω resistor → Arduino **Pin 5**
+   - Short leg (cathode -) → breadboard ground rail
+3. **Insert Blue LED** into breadboard
+   - Long leg (anode +) → 220Ω resistor → Arduino **Pin 3**
+   - Short leg (cathode -) → breadboard ground rail
+
+**LED Polarity Check:**
+- **Long leg = Anode (+)** - connects to resistor → Arduino pin
+- **Short leg = Cathode (-)** - connects directly to ground
+- **Flat side** of LED body indicates cathode (-) side
 
 ### Step 5: Final Connections Check
 ```
 Pin Assignment Summary:
-├── Pin 3: RGB LED Blue (with 220Ω resistor)
-├── Pin 5: RGB LED Green (with 220Ω resistor)  
-├── Pin 6: RGB LED Red (with 220Ω resistor)
+├── Pin 3: Blue LED (with 220Ω resistor)
+├── Pin 5: Green LED (with 220Ω resistor)  
+├── Pin 6: Red LED (with 220Ω resistor)
 ├── Pin 8: Active Buzzer positive
 ├── Pin 9: SG90 Servo signal (orange wire)
 ├── 5V: Servo power + LED/Buzzer power rail
@@ -364,10 +386,12 @@ void loop() {
 ### LED Not Working
 **Symptoms:** LED doesn't light up or wrong colors
 **Solutions:**
-- Check resistor connections (220Ω required)
-- Verify LED polarity (longest leg = cathode = ground)
-- Test individual pins with voltmeter
+- Check resistor connections (220Ω required for each LED)
+- Verify LED polarity (long leg = anode = + side goes to resistor)
+- Verify LED polarity (short leg = cathode = - side goes to ground)
+- Test individual pins with voltmeter (should read ~3.3V when HIGH)
 - Ensure 5V power rail has voltage
+- Check that LED isn't burned out (swap with known good LED)
 
 ### Servo Not Moving  
 **Symptoms:** Servo doesn't respond to commands
