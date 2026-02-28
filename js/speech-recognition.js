@@ -81,16 +81,41 @@
         // Recognition ends
         recognition.onend = function() {
             console.log('Speech recognition ended');
-            isListening = false;
+
+            // On Quest/Android, the API ends the session after each utterance or silence.
+            // Auto-restart as long as the user hasn't explicitly stopped it.
+            if (isListening) {
+                console.log('Auto-restarting speech recognition (Quest continuous mode)...');
+                try {
+                    recognition.start();
+                } catch (e) {
+                    // Already started or another error — back off briefly then retry
+                    console.warn('Restart failed, retrying in 300ms:', e);
+                    setTimeout(() => {
+                        if (isListening) {
+                            try { recognition.start(); } catch (e2) {
+                                console.error('Retry failed:', e2);
+                                isListening = false;
+                                updateStatus('Speech recognition stopped');
+                                updateSpeechButton('Start Speech Recognition');
+                                const micIndicator = document.getElementById('micIndicator');
+                                if (micIndicator) micIndicator.setAttribute('visible', 'false');
+                            }
+                        }
+                    }, 300);
+                }
+                return;
+            }
+
             updateStatus('Speech recognition stopped');
             updateSpeechButton('Start Speech Recognition');
-            
+
             // Hide mic indicator in AR
             const micIndicator = document.getElementById('micIndicator');
             if (micIndicator) {
                 micIndicator.setAttribute('visible', 'false');
             }
-            
+
             // Clear captions after a delay
             setTimeout(() => {
                 if (window.updateCaption) {
