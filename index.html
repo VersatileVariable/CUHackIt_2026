@@ -715,15 +715,15 @@
                 if (text && text.trim()) {
                     console.log('Setting caption text to:', text);
                     
-                    // Set the text component's value property
-                    captionText.setAttribute('text', 'value', text);
+                    // Set via <a-text> primitive attribute (reliable in A-Frame 1.4.0)
+                    captionText.setAttribute('value', text);
                     captionText.setAttribute('visible', true);
                     captionBg.setAttribute('visible', true);
-                    
+
                     console.log('Caption text set successfully');
                 } else {
                     // Show placeholder instead of hiding
-                    captionText.setAttribute('text', 'value', 'Captions will be added here');
+                    captionText.setAttribute('value', 'Captions will be added here');
                     captionText.setAttribute('visible', true);
                     captionBg.setAttribute('visible', true);
                 }

@@ -1,39 +1,49 @@
 #!/bin/bash
 # ClearPath AR - Quick Deployment Script
-# Run this script to start the local server and open the app
+# Run this script to start the local HTTPS server and open the app
+#
+# IMPORTANT: HTTPS is required for microphone access on the Quest 3.
+# Plain HTTP will silently block getUserMedia() and SpeechRecognition
+# on any non-localhost origin.
+
+set -e
+cd "$(dirname "$0")"
 
 echo "Starting ClearPath AR deployment..."
 
-# Check if Python 3 is available
+# Generate self-signed certificate if missing
+if [ ! -f cert.pem ] || [ ! -f key.pem ]; then
+    echo "Generating self-signed SSL certificate..."
+    if command -v openssl &> /dev/null; then
+        openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem \
+            -days 365 -nodes -subj "/CN=ClearPath-AR" 2>/dev/null
+        echo "Certificate generated."
+    else
+        echo "ERROR: openssl not found. Install it to generate certificates."
+        exit 1
+    fi
+fi
+
+# Get local IP address
+LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -1)
+
+echo ""
+echo "Access URLs (HTTPS required for microphone):"
+echo "   Local:   https://localhost:5500"
+echo "   Network: https://$LOCAL_IP:5500"
+echo ""
+echo "For Meta Quest 3:"
+echo "   Main App: https://$LOCAL_IP:5500/index.html"
+echo ""
+echo "NOTE: You will see a certificate warning - click Advanced -> Proceed to continue."
+echo "Press Ctrl+C to stop the server"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Start HTTPS server
 if command -v python3 &> /dev/null; then
-    echo "Python 3 found - starting HTTP server on port 8000"
-    
-    # Get local IP address
-    LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -1)
-    
-    echo "Access URLs:"
-    echo "   Local: http://localhost:8000"
-    echo "   Network: http://$LOCAL_IP:8000"
-    echo ""
-    echo "For Meta Quest 3:"
-    echo "   Setup Page: http://$LOCAL_IP:8000/setup.html"
-    echo "   Main App: http://$LOCAL_IP:8000/index.html"
-    echo ""
-    echo "Press Ctrl+C to stop the server"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
-    # Start Python HTTP server
-    python3 -m http.server 8000
-    
-elif command -v node &> /dev/null && command -v npx &> /dev/null; then
-    echo "Node.js found - installing and starting http-server"
-    npx http-server . -p 8000 -c-1
-    
+    python3 start-https-server.py
 else
-    echo "Neither Python 3 nor Node.js found"
-    echo "Please install one of the following:"
-    echo "  • Python 3: https://python.org/downloads/"
-    echo "  • Node.js: https://nodejs.org/"
-    echo ""
-    echo "Alternative: Use VS Code Live Server extension"
+    echo "ERROR: Python 3 is required to run the HTTPS server."
+    echo "Install it from https://python.org/downloads/"
+    exit 1
 fi
