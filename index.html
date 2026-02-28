@@ -173,7 +173,7 @@
                 opacity="0.6">
             </a-ring>
             <!-- 1. LIVE CAPTION BAR (Lower Third) -->
-            <a-entity id="captionBar" position="0 -0.7 -2.5">
+            <a-entity id="captionBar" position="0 -1.0 -2.5">
                 <!-- Caption Background -->
                 <a-box 
                     id="captionBg"
@@ -206,7 +206,7 @@
             </a-entity>
 
             <!-- 2. TOPIC BOX (Center) -->
-            <a-entity id="topicBox" position="0 -0.15 -2.5">
+            <a-entity id="topicBox" position="0 -0.6 -2.5">
                 <!-- Topic Background -->
                 <a-box 
                     id="topicBg"
@@ -462,31 +462,35 @@
             
             // Initialize WebSocket bridge to laptop
             if (window.bridgeModule) {
-                // Check if we're accessing via ngrok (public tunnel)
-                const isNgrokOrPublic = window.location.hostname.includes('ngrok') || 
-                                       window.location.hostname.includes('loca.lt') ||
-                                       window.location.hostname.includes('vercel') ||
-                                       window.location.hostname.includes('netlify') ||
-                                       !window.location.hostname.match(/^192\.|^172\.|^10\.|localhost/);
-                
-                if (isNgrokOrPublic) {
-                    console.log('🌐 Public deployment mode - Bridge connection disabled');
-                    console.log('📱 Speech, Audio, and AI features available in headset');
-                    console.log('ℹ️  iPhone haptic feedback requires local network deployment');
-                    // Update status to show bridge is intentionally disabled
-                    setTimeout(() => {
-                        const statusEl = document.getElementById('bridgeStatus');
-                        if (statusEl) {
-                            statusEl.textContent = '🔌 Bridge: Not available (deployed)';
-                            statusEl.classList.add('warning');
-                        }
-                    }, 1000);
-                } else {
-                    console.log('Initializing WebSocket bridge...');
-                    // Set laptop IP address - update this if your network changes
-                    window.bridgeModule.setServerAddress('ws://172.22.53.62:8080');
-                    // Connect to bridge server
+                // Allow overriding bridge URL via ?bridge= query param (e.g. for ngrok)
+                const urlParams = new URLSearchParams(window.location.search);
+                const bridgeParam = urlParams.get('bridge');
+
+                if (bridgeParam) {
+                    console.log('Bridge URL from ?bridge= param:', bridgeParam);
+                    window.bridgeModule.setServerAddress(bridgeParam);
                     window.bridgeModule.connect();
+                } else {
+                    const isNgrokOrPublic = window.location.hostname.includes('ngrok') ||
+                                           window.location.hostname.includes('loca.lt') ||
+                                           window.location.hostname.includes('vercel') ||
+                                           window.location.hostname.includes('netlify') ||
+                                           !window.location.hostname.match(/^192\.|^172\.|^10\.|localhost/);
+
+                    if (isNgrokOrPublic) {
+                        console.log('Public deployment mode - no ?bridge= param provided');
+                        setTimeout(() => {
+                            const statusEl = document.getElementById('bridgeStatus');
+                            if (statusEl) {
+                                statusEl.textContent = '🔌 Bridge: Add ?bridge=wss://xxx.ngrok.io';
+                                statusEl.classList.add('warning');
+                            }
+                        }, 1000);
+                    } else {
+                        console.log('Initializing WebSocket bridge...');
+                        window.bridgeModule.setServerAddress('ws://172.22.53.62:8080');
+                        window.bridgeModule.connect();
+                    }
                 }
             } else {
                 console.error('Bridge module not loaded!');
@@ -662,15 +666,15 @@
                 if (!isActive) {
                     // Turning ON
                     if (window.aiModule) {
-                        window.aiModule.enable();
+                        window.aiModule.start();
                         updateToggleButton(aiBtn, true);
                     } else {
                         console.error('AI module not loaded');
                     }
                 } else {
                     // Turning OFF
-                    if (window.aiModule && window.aiModule.disable) {
-                        window.aiModule.disable();
+                    if (window.aiModule && window.aiModule.stop) {
+                        window.aiModule.stop();
                     }
                     updateToggleButton(aiBtn, false);
                 }

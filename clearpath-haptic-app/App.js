@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
-const LAPTOP_IP = '172.22.53.62'; // replace with your laptop's local IP
-const PORT = 8080;
+const DEFAULT_URL = 'ws://172.22.53.62:8080';
 
 const COLORS = {
   idle: '#1a1a2e',
@@ -47,19 +46,28 @@ const HAPTIC_PATTERNS = {
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default function App() {
-  const [status, setStatus] = useState('Connecting...');
+  const [status, setStatus] = useState('Not connected');
   const [bgColor, setBgColor] = useState(COLORS.idle);
   const [lastEvent, setLastEvent] = useState('');
   const [connected, setConnected] = useState(false);
+  const [serverUrl, setServerUrl] = useState(DEFAULT_URL);
+  const [inputUrl, setInputUrl] = useState(DEFAULT_URL);
+  const [editing, setEditing] = useState(false);
+  const wsRef = useRef(null);
+  const reconnectTimer = useRef(null);
 
   useEffect(() => {
-    let ws;
-    let reconnectTimer;
+    let cancelled = false;
 
     const connect = () => {
-      ws = new WebSocket(`ws://${LAPTOP_IP}:${PORT}`);
+      if (cancelled) return;
+      setStatus('Connecting...');
+
+      const ws = new WebSocket(serverUrl);
+      wsRef.current = ws;
 
       ws.onopen = () => {
+        if (cancelled) { ws.close(); return; }
         setConnected(true);
         setStatus('Connected ✓');
         ws.send(JSON.stringify({ type: 'register', clientType: 'phone', clientId: `iphone-${Date.now()}` }));
@@ -67,17 +75,11 @@ export default function App() {
 
       ws.onmessage = async (e) => {
         const data = JSON.parse(e.data);
-        
-        // Handle different message types
         if (data.type === 'haptic') {
           const eventType = data.event;
           setLastEvent(eventType);
-
-          // trigger color flash
           setBgColor(COLORS[eventType] || COLORS.idle);
           setTimeout(() => setBgColor(COLORS.idle), 800);
-
-          // trigger haptic
           if (HAPTIC_PATTERNS[eventType]) {
             await HAPTIC_PATTERNS[eventType]();
           }
@@ -87,37 +89,73 @@ export default function App() {
       };
 
       ws.onclose = () => {
+        if (cancelled) return;
         setConnected(false);
         setStatus('Reconnecting...');
-        reconnectTimer = setTimeout(connect, 2000);
+        reconnectTimer.current = setTimeout(connect, 2000);
       };
 
-      ws.onerror = () => {
-        ws.close();
-      };
+      ws.onerror = () => { ws.close(); };
     };
 
     connect();
 
     return () => {
-      clearTimeout(reconnectTimer);
-      ws?.close();
+      cancelled = true;
+      clearTimeout(reconnectTimer.current);
+      wsRef.current?.close();
     };
-  }, []);
+  }, [serverUrl]);
+
+  const applyUrl = () => {
+    const trimmed = inputUrl.trim();
+    if (!trimmed) return;
+    setEditing(false);
+    // Closing the old socket triggers reconnect via useEffect cleanup
+    setServerUrl(trimmed);
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: bgColor }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: bgColor }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={styles.indicator}>
         <View style={[styles.dot, { backgroundColor: connected ? '#44ff88' : '#ff4444' }]} />
         <Text style={styles.status}>{status}</Text>
       </View>
+
       <Text style={styles.logo}>ClearPath</Text>
       <Text style={styles.subtitle}>Haptic Belt Module</Text>
+
       {lastEvent ? (
         <Text style={styles.event}>Last: {lastEvent}</Text>
       ) : null}
-      <Text style={styles.ip}>Bridge: {LAPTOP_IP}:{PORT}</Text>
-    </View>
+
+      {/* Tappable URL row — tap to edit */}
+      {editing ? (
+        <View style={styles.urlEditRow}>
+          <TextInput
+            style={styles.urlInput}
+            value={inputUrl}
+            onChangeText={setInputUrl}
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder="wss://xxx.ngrok.io or ws://IP:8080"
+            placeholderTextColor="#ffffff40"
+            onSubmitEditing={applyUrl}
+            returnKeyType="connect"
+          />
+          <TouchableOpacity style={styles.connectBtn} onPress={applyUrl}>
+            <Text style={styles.connectBtnText}>Connect</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity onPress={() => { setInputUrl(serverUrl); setEditing(true); }}>
+          <Text style={styles.ip}>{serverUrl} (tap to change)</Text>
+        </TouchableOpacity>
+      )}
+    </KeyboardAvoidingView>
   );
 }
 
@@ -126,7 +164,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    transition: 'background-color 0.3s',
   },
   indicator: {
     position: 'absolute',
@@ -160,7 +197,7 @@ const styles = StyleSheet.create({
   },
   event: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 130,
     fontSize: 13,
     color: '#ffffff40',
     letterSpacing: 1,
@@ -169,7 +206,40 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 60,
     fontSize: 11,
-    color: '#ffffff30',
+    color: '#ffffff50',
     fontFamily: 'Courier',
+    textDecorationLine: 'underline',
+  },
+  urlEditRow: {
+    position: 'absolute',
+    bottom: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    gap: 8,
+    width: '100%',
+  },
+  urlInput: {
+    flex: 1,
+    backgroundColor: '#ffffff15',
+    color: '#ffffff',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12,
+    fontFamily: 'Courier',
+    borderWidth: 1,
+    borderColor: '#ffffff30',
+  },
+  connectBtn: {
+    backgroundColor: '#a855f7',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  connectBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
