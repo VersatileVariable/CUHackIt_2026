@@ -133,22 +133,22 @@
                 const transcript = result[0].transcript;
                 const confidence = result[0].confidence;
                 
-                // Only use results above confidence threshold
-                if (confidence >= config.confidenceThreshold) {
-                    if (result.isFinal) {
+                if (result.isFinal) {
+                    // Only apply confidence threshold to final results
+                    if (confidence >= config.confidenceThreshold) {
                         finalTranscript += transcript + ' ';
-                        
+
                         // Add to speech buffer for AI summarization
                         addToSpeechBuffer(transcript);
-                        
+
                         console.log('Final speech:', transcript, 'Confidence:', confidence);
-                        
                     } else {
-                        interimTranscript += transcript;
-                        console.log('Interim speech:', transcript);
+                        console.log('Low confidence speech ignored:', transcript, 'Confidence:', confidence);
                     }
                 } else {
-                    console.log('Low confidence speech ignored:', transcript, 'Confidence:', confidence);
+                    // Always show interim results (confidence is always 0 for interim in Chrome)
+                    interimTranscript += transcript;
+                    console.log('Interim speech:', transcript);
                 }
             }
             
@@ -633,7 +633,7 @@
             
             // Reset dashboard to defaults
             const nameEl = document.getElementById('dashboardName');
-            if (nameEl) nameEl.setAttribute('value', 'Person's Name: ...');
+            if (nameEl) nameEl.setAttribute('value', "Person's Name: ...");
             
             const relationEl = document.getElementById('dashboardRelation');
             if (relationEl) relationEl.setAttribute('value', 'Relationship: Unknown');
