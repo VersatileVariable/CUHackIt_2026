@@ -127,40 +127,48 @@
         // Recognition error
         recognition.onerror = function(event) {
             console.error('Speech recognition error:', event.error);
-            
-            let errorMessage = 'Speech recognition error: ';
+
+            // 'no-speech' is normal on Quest — it fires after silence then onend restarts.
+            // Keep isListening = true so the onend auto-restart kicks in.
+            if (event.error === 'no-speech') {
+                console.log('No speech detected — will auto-restart via onend');
+                updateStatus('Listening...');
+                return;
+            }
+
+            // 'network' is also transient (Google speech servers) — same treatment.
+            if (event.error === 'network') {
+                console.log('Network error — will auto-restart via onend');
+                updateStatus('Reconnecting speech...');
+                return;
+            }
+
+            // Fatal errors: stop fully and show help
+            let errorMessage = 'Speech error: ';
             let isPermissionError = false;
-            
+
             switch(event.error) {
-                case 'no-speech':
-                    errorMessage += 'No speech detected';
-                    break;
                 case 'audio-capture':
                     errorMessage += 'Audio capture failed - Check microphone';
                     isPermissionError = true;
                     break;
                 case 'not-allowed':
-                    errorMessage += 'Permission denied - Please allow microphone access';
+                    errorMessage += 'Permission denied - Allow microphone access';
                     isPermissionError = true;
-                    break;
-                case 'network':
-                    errorMessage += 'Network error';
                     break;
                 default:
                     errorMessage += event.error;
             }
-            
+
             updateStatus(errorMessage);
-            
-            // Show help for permission errors
+
             if (isPermissionError) {
                 showMicrophonePermissionError();
             }
-            
+
             isListening = false;
             updateSpeechButton('Start Speech Recognition');
-            
-            // Hide mic indicator in AR
+
             const micIndicator = document.getElementById('micIndicator');
             if (micIndicator) {
                 micIndicator.setAttribute('visible', 'false');
