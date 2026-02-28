@@ -8,8 +8,8 @@ import ssl
 import os
 import sys
 
-# Change to project directory
-os.chdir('/Users/annagaleano/Code/Hackathon/CUHackIt_2026')
+# Change to project directory (same directory as this script)
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # Server configuration
 PORT = 5500
