@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClearPath Setup - Configuration</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .setup-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #9ca3af;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            color: #374151;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-section h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            color: #111827;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            transform: translateY(-1px);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        button {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 160px;
+        }
+
+        .primary-button {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(79, 70, 229, 0.4);
+        }
+
+        .secondary-button {
+            background: #f9fafb;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        .secondary-button:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+
+        .status-message {
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-message.show {
+            opacity: 1;
+        }
+
+        .status-message.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #065f46;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #991b1b;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .preview-section {
+            background: rgba(79, 70, 229, 0.05);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .preview-section h3 {
+            color: #4F46E5;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .preview-dashboard {
+            background: rgba(6, 95, 70, 0.9);
+            color: #F9FAFB;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .preview-item {
+            margin-bottom: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(209, 250, 229, 0.2);
+        }
+
+        .preview-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .preview-label {
+            color: #A7F3D0;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .setup-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="logo-section">
+            <div class="logo">CP</div>
+            <h1>ClearPath Setup</h1>
+            <p class="subtitle">AR Accessibility Configuration</p>
+            <p class="description">
+                Configure the dashboard information that will be displayed in the AR view. 
+                This helps provide context for conversations and relationships.
+            </p>
+        </div>
+
+        <form id="setupForm">
+            <div class="form-section">
+                <h2>👤 Person Information</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="personName">Person's Name *</label>
+                        <input type="text" id="personName" required placeholder="e.g., Sarah Johnson">
+                        <div class="help-text">Name of the person you'll primarily be talking to</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="relationship">Relationship *</label>
+                        <select id="relationship" required>
+                            <option value="">Select relationship...</option>
+                            <option value="Family - Spouse">Family - Spouse</option>
+                            <option value="Family - Parent">Family - Parent</option>
+                            <option value="Family - Child">Family - Child</option>
+                            <option value="Family - Sibling">Family - Sibling</option>
+                            <option value="Family - Other">Family - Other</option>
+                            <option value="Friend - Close">Friend - Close</option>
+                            <option value="Friend - Casual">Friend - Casual</option>
+                            <option value="Caregiver">Caregiver</option>
+                            <option value="Healthcare Provider">Healthcare Provider</option>
+                            <option value="Coworker">Coworker</option>
+                            <option value="Teacher">Teacher</option>
+                            <option value="Student">Student</option>
+                            <option value="Neighbor">Neighbor</option>
+                            <option value="Service Provider">Service Provider</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div class="help-text">How this person relates to the user</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>📝 Context & Notes</h2>
+                
+                <div class="form-group">
+                    <label for="userNotes">Important Notes</label>
+                    <textarea id="userNotes" placeholder="Any important context, reminders, or information about this person or conversation...&#10;&#10;Examples:&#10;- Usually talks about gardening&#10;- Has hearing difficulties, speak clearly&#10;- Prefers topics about family&#10;- Avoid discussing health issues"></textarea>
+                    <div class="help-text">Context that helps with conversation and understanding</div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>⚙️ Accessibility Settings</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fontSize">Caption Size</label>
+                        <select id="fontSize">
+                            <option value="normal">Normal (24px)</option>
+                            <option value="large">Large (28px)</option>
+                            <option value="extra-large">Extra Large (32px)</option>
+                        </select>
+                        <div class="help-text">Size of live captions in AR view</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contrastMode">Contrast Mode</label>
+                        <select id="contrastMode">
+                            <option value="normal">Normal</option>
+                            <option value="high">High Contrast</option>
+                        </select>
+                        <div class="help-text">Visual accessibility enhancement</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h3>🔍 Dashboard Preview</h3>
+                <div class="preview-dashboard" id="previewDashboard">
+                    <div class="preview-item">
+                        <div class="preview-label">Person</div>
+                        <div id="previewName">Enter name above...</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">Relationship</div>
+                        <div id="previewRelation">Select relationship above...</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">Notes</div>
+                        <div id="previewNotes">Add notes above...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="secondary-button" onclick="loadDefaults()">Load Defaults</button>
+                <button type="submit" class="primary-button">Save & Launch ClearPath</button>
+            </div>
+        </form>
+
+        <div id="statusMessage" class="status-message"></div>
+    </div>
+
+    <script>
+        // Form elements
+        const form = document.getElementById('setupForm');
+        const personNameInput = document.getElementById('personName');
+        const relationshipSelect = document.getElementById('relationship');
+        const userNotesTextarea = document.getElementById('userNotes');
+        const fontSizeSelect = document.getElementById('fontSize');
+        const contrastModeSelect = document.getElementById('contrastMode');
+        
+        // Preview elements
+        const previewName = document.getElementById('previewName');
+        const previewRelation = document.getElementById('previewRelation');
+        const previewNotes = document.getElementById('previewNotes');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Load existing configuration on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadExistingConfig();
+            setupRealTimePreview();
+            console.log('🔧 ClearPath Setup Interface Loaded');
+        });
+
+        // Load existing configuration from localStorage
+        function loadExistingConfig() {
+            const config = JSON.parse(localStorage.getItem('clearpath-config') || '{}');
+            
+            if (config.personName) {
+                personNameInput.value = config.personName;
+                relationshipSelect.value = config.relationship || '';
+                userNotesTextarea.value = config.notes || '';
+                fontSizeSelect.value = config.fontSize || 'normal';
+                contrastModeSelect.value = config.contrastMode || 'normal';
+                
+                updatePreview();
+                showStatus('Loaded existing configuration', 'success');
+                console.log('📋 Loaded existing config:', config);
+            } else {
+                console.log('📋 No existing config found');
+            }
+        }
+
+        // Set up real-time preview updates
+        function setupRealTimePreview() {
+            personNameInput.addEventListener('input', updatePreview);
+            relationshipSelect.addEventListener('change', updatePreview);
+            userNotesTextarea.addEventListener('input', updatePreview);
+            
+            // Initial preview update
+            updatePreview();
+        }
+
+        // Update preview dashboard
+        function updatePreview() {
+            const name = personNameInput.value.trim() || 'Enter name above...';
+            const relationship = relationshipSelect.value || 'Select relationship above...';
+            const notes = userNotesTextarea.value.trim() || 'Add notes above...';
+            
+            previewName.textContent = name;
+            previewRelation.textContent = relationship;
+            previewNotes.textContent = notes.length > 100 ? notes.substring(0, 100) + '...' : notes;
+        }
+
+        // Load default values
+        function loadDefaults() {
+            personNameInput.value = 'Demo Person';
+            relationshipSelect.value = 'Friend - Close';
+            userNotesTextarea.value = 'This is a demo configuration for ClearPath. Usually enjoys discussing technology and accessibility topics.';
+            fontSizeSelect.value = 'normal';
+            contrastModeSelect.value = 'normal';
+            
+            updatePreview();
+            showStatus('Default values loaded', 'success');
+            console.log('🔄 Default values loaded');
+        }
+
+        // Handle form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate required fields
+            if (!personNameInput.value.trim()) {
+                showStatus('Please enter a person\'s name', 'error');
+                personNameInput.focus();
+                return;
+            }
+            
+            if (!relationshipSelect.value) {
+                showStatus('Please select a relationship', 'error');
+                relationshipSelect.focus();
+                return;
+            }
+            
+            // Save configuration
+            const config = {
+                personName: personNameInput.value.trim(),
+                relationship: relationshipSelect.value,
+                notes: userNotesTextarea.value.trim(),
+                fontSize: fontSizeSelect.value,
+                contrastMode: contrastModeSelect.value,
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                localStorage.setItem('clearpath-config', JSON.stringify(config));
+                showStatus('Configuration saved successfully!', 'success');
+                
+                console.log('💾 Configuration saved:', config);
+                
+                // Show success and redirect
+                setTimeout(() => {
+                    showStatus('Launching ClearPath AR Experience...', 'success');
+                    
+                    // Redirect to main AR application
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                    
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ Error saving configuration:', error);
+                showStatus('Error saving configuration. Please try again.', 'error');
+            }
+        });
+
+        // Show status messages
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type} show`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusMessage.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'Enter':
+                        e.preventDefault();
+                        form.dispatchEvent(new Event('submit'));
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        loadDefaults();
+                        break;
+                }
+            }
+        });
+
+        // Handle page visibility for continuous preview updates
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                updatePreview();
+            }
+        });
+    </script>
+</body>
+</html>

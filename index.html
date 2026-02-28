@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClearPath - AR Accessibility Wearable</title>
+    
+    <!-- A-Frame WebXR Framework -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <!-- A-Frame WebXR Extras for AR -->
+    <script src="https://cdn.jsdelivr.net/gh/supermedium/superframe@master/components/environment/dist/aframe-environment-component.min.js"></script>
+    
+    <!-- ClearPath AR Styles -->
+    <link rel="stylesheet" href="css/ar-styles.css">
+    
+    <!-- ClearPath JavaScript Modules -->
+    <script src="js/speech-recognition.js"></script>
+    <script src="js/serial-communication.js"></script>
+    <script src="js/audio-direction.js"></script>
+    <script src="js/ai-summarizer.js"></script>
+    <script src="js/ar-manager.js"></script>
+    
+    <script>
+        // WebXR AR Configuration
+        AFRAME.registerComponent('ar-mode', {
+            init: function () {
+                const sceneEl = this.el;
+                
+                // Enable AR mode and passthrough
+                sceneEl.addEventListener('enter-vr', function () {
+                    console.log('Entering AR mode');
+                    document.body.classList.add('ar-active');
+                });
+                
+                sceneEl.addEventListener('exit-vr', function () {
+                    console.log('Exiting AR mode');
+                    document.body.classList.remove('ar-active');
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <!-- AR Scene Container -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        vr-mode-ui="enabled: true; enterARText: Enter AR Mode; enterVRText: Enter VR Mode"
+        ar-mode
+        background="transparent"
+        renderer="colorManagement: true; physicallyCorrectLights: true; gammaOutput: true;"
+    >
+        <!-- Assets -->
+        <a-assets>
+            <!-- Fonts optimized for AR readability -->
+            <a-mixin id="caption-font" 
+                     text="font: roboto; 
+                           color: #FFFFFF; 
+                           shader: sdf; 
+                           side: double;
+                           opacity: 0.95;
+                           align: center;
+                           wrapCount: 40;
+                           letterSpacing: 1;">
+            </a-mixin>
+            
+            <a-mixin id="topic-font"
+                     text="font: roboto;
+                           color: #E8F4FD;
+                           shader: sdf;
+                           side: double;
+                           opacity: 0.9;
+                           align: left;
+                           wrapCount: 25;
+                           letterSpacing: 0;">
+            </a-mixin>
+            
+            <a-mixin id="dashboard-font"
+                     text="font: roboto;
+                           color: #FFFFFF;
+                           shader: sdf;
+                           side: double;
+                           opacity: 1.0;
+                           align: left;
+                           wrapCount: 20;
+                           letterSpacing: 0;">
+            </a-mixin>
+        </a-assets>
+
+        <!-- AR Camera with Passthrough -->
+        <a-camera 
+            id="arCamera"
+            position="0 1.6 0"
+            look-controls="enabled: true"
+            wasd-controls="enabled: false"
+            cursor="rayOrigin: mouse"
+        >
+            <!-- 1. LIVE CAPTION BAR (Lower Third) -->
+            <a-entity id="captionBar" position="0 -0.8 -2">
+                <!-- Caption Background -->
+                <a-box 
+                    id="captionBg"
+                    position="0 0 0"
+                    width="4"
+                    height="0.3"
+                    depth="0.01"
+                    color="#000000"
+                    opacity="0.7"
+                    visible="false">
+                </a-box>
+                
+                <!-- Caption Text -->
+                <a-text 
+                    id="captionText"
+                    mixin="caption-font"
+                    position="0 0 0.01"
+                    value=""
+                    width="6"
+                    color="#FFFFFF"
+                    visible="false">
+                </a-text>
+            </a-entity>
+
+            <!-- 2. DIRECTIONAL NOISE INDICATORS (Edge Glows) -->
+            <!-- Left Edge Glow (Red for left sounds) -->
+            <a-box 
+                id="leftGlow"
+                position="-2.5 0 -2"
+                width="0.1"
+                height="2"
+                depth="0.01"
+                color="#FF0000"
+                opacity="0"
+                material="transparent: true; emissive: #FF0000; emissiveIntensity: 0">
+            </a-box>
+            
+            <!-- Right Edge Glow (Green for right sounds) -->
+            <a-box 
+                id="rightGlow"
+                position="2.5 0 -2"
+                width="0.1"
+                height="2"
+                depth="0.01"
+                color="#00FF00"
+                opacity="0"
+                material="transparent: true; emissive: #00FF00; emissiveIntensity: 0">
+            </a-box>
+
+            <!-- 3. TOPIC OF CONVERSATION BOX -->
+            <a-entity id="topicBox" position="-1.5 0.5 -2">
+                <!-- Topic Background -->
+                <a-box 
+                    id="topicBg"
+                    position="0 0 0"
+                    width="2"
+                    height="0.6"
+                    depth="0.01"
+                    color="#1E3A8A"
+                    opacity="0.8"
+                    visible="false">
+                </a-box>
+                
+                <!-- Topic Title -->
+                <a-text 
+                    id="topicTitle"
+                    mixin="topic-font"
+                    position="-0.9 0.2 0.01"
+                    value="Topic:"
+                    width="4"
+                    color="#FBBF24"
+                    visible="false">
+                </a-text>
+                
+                <!-- Topic Content -->
+                <a-text 
+                    id="topicContent"
+                    mixin="topic-font"
+                    position="-0.9 -0.1 0.01"
+                    value=""
+                    width="4"
+                    color="#E8F4FD"
+                    visible="false">
+                </a-text>
+            </a-entity>
+
+            <!-- 4. DASHBOARD PANEL (Top Right) -->
+            <a-entity id="dashboardPanel" position="1.5 1.2 -2.5">
+                <!-- Dashboard Background -->
+                <a-box 
+                    id="dashboardBg"
+                    position="0 0 0"
+                    width="2.2"
+                    height="1"
+                    depth="0.01"
+                    color="#065F46"
+                    opacity="0.85"
+                    visible="true">
+                </a-box>
+                
+                <!-- Person Name -->
+                <a-text 
+                    id="dashboardName"
+                    mixin="dashboard-font"
+                    position="-1 0.3 0.01"
+                    value="Person: Loading..."
+                    width="4"
+                    color="#F9FAFB"
+                    visible="true">
+                </a-text>
+                
+                <!-- Relationship -->
+                <a-text 
+                    id="dashboardRelation"
+                    mixin="dashboard-font"
+                    position="-1 0 0.01"
+                    value="Relationship: Loading..."
+                    width="4"
+                    color="#D1FAE5"
+                    visible="true">
+                </a-text>
+                
+                <!-- Notes -->
+                <a-text 
+                    id="dashboardNotes"
+                    mixin="dashboard-font"
+                    position="-1 -0.3 0.01"
+                    value="Notes: Loading..."
+                    width="4"
+                    color="#A7F3D0"
+                    visible="true">
+                </a-text>
+            </a-entity>
+
+            <!-- Status Indicator (for debugging) -->
+            <a-text 
+                id="statusText"
+                position="0 1.5 -2"
+                value="ClearPath Loading..."
+                color="#FFFFFF"
+                width="4"
+                align="center"
+                visible="true">
+            </a-text>
+        </a-camera>
+
+        <!-- Ambient lighting for AR -->
+        <a-light type="ambient" color="#404040" intensity="0.5"></a-light>
+    </a-scene>
+
+    <!-- AR Control Panel (Invisible but accessible) -->
+    <div id="arControls" class="ar-controls">
+        <!-- Speech Recognition Controls -->
+        <button id="toggleSpeech" class="ar-button speech-btn">Start Speech Recognition</button>
+        
+        <!-- Arduino Connection Controls -->
+        <button id="connectArduino" class="ar-button hardware-btn">Connect Wristband</button>
+        
+        <!-- Audio Direction Controls -->
+        <button id="toggleAudio" class="ar-button audio-btn">Enable Audio Direction</button>
+        
+        <!-- AI Summarization Controls -->
+        <button id="toggleAI" class="ar-button ai-btn">Enable AI Topics</button>
+        
+        <!-- System Status -->
+        <div id="systemStatus" class="status-panel">
+            <div id="speechStatus" class="status-item">Speech: Disabled</div>
+            <div id="arduinoStatus" class="status-item">Arduino: Disconnected</div>
+            <div id="audioStatus" class="status-item">Audio: Disabled</div>
+            <div id="aiStatus" class="status-item">AI: Disabled</div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize ClearPath AR System on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 ClearPath AR System Starting...');
+            
+            // Load user configuration from localStorage or setup
+            loadUserConfiguration();
+            
+            // Initialize all AR layers
+            initializeDirectionalIndicators();
+            initializeCaptionSystem();
+            initializeTopicSystem();
+            initializeDashboard();
+            
+            // Set up UI event listeners
+            setupUIControls();
+            
+            // Update status
+            updateStatusText('ClearPath Ready - Tap buttons to activate features');
+            
+            console.log('✅ ClearPath AR System Ready!');
+        });
+
+        // Load user configuration
+        function loadUserConfiguration() {
+            const config = JSON.parse(localStorage.getItem('clearpath-config') || '{}');
+            
+            if (config.personName) {
+                updateDashboard(config.personName, config.relationship, config.notes);
+                console.log('👤 Loaded user configuration:', config);
+            } else {
+                console.log('⚠️ No configuration found - using defaults');
+                updateDashboard('Unknown Person', 'Unknown', 'Configure in setup.html');
+            }
+        }
+
+        // Update dashboard information
+        function updateDashboard(name, relationship, notes) {
+            const nameEl = document.getElementById('dashboardName');
+            const relationEl = document.getElementById('dashboardRelation');
+            const notesEl = document.getElementById('dashboardNotes');
+            
+            if (nameEl) nameEl.setAttribute('value', `Person: ${name}`);
+            if (relationEl) relationEl.setAttribute('value', `Relationship: ${relationship}`);
+            if (notesEl) notesEl.setAttribute('value', `Notes: ${notes}`);
+        }
+
+        // Initialize directional sound indicators
+        function initializeDirectionalIndicators() {
+            console.log('🎯 Initializing directional indicators...');
+            // This will be expanded by audio-direction.js
+        }
+
+        // Initialize live captions
+        function initializeCaptionSystem() {
+            console.log('💬 Initializing caption system...');
+            // This will be expanded by speech-recognition.js
+        }
+
+        // Initialize topic conversation system
+        function initializeTopicSystem() {
+            console.log('🤖 Initializing topic system...');
+            // This will be expanded by ai-summarizer.js
+        }
+
+        // Initialize dashboard
+        function initializeDashboard() {
+            console.log('📊 Initializing dashboard...');
+            // Dashboard is already visible and populated
+        }
+
+        // Set up UI control event listeners
+        function setupUIControls() {
+            // Speech Recognition Toggle
+            document.getElementById('toggleSpeech').addEventListener('click', function() {
+                if (window.speechModule) {
+                    window.speechModule.toggle();
+                } else {
+                    console.error('Speech module not loaded');
+                }
+            });
+
+            // Arduino Connection Toggle
+            document.getElementById('connectArduino').addEventListener('click', function() {
+                if (window.serialModule) {
+                    window.serialModule.connect();
+                } else {
+                    console.error('Serial module not loaded');
+                }
+            });
+
+            // Audio Direction Toggle
+            document.getElementById('toggleAudio').addEventListener('click', function() {
+                if (window.audioModule) {
+                    window.audioModule.toggle();
+                } else {
+                    console.error('Audio module not loaded');
+                }
+            });
+
+            // AI Summarization Toggle
+            document.getElementById('toggleAI').addEventListener('click', function() {
+                if (window.aiModule) {
+                    window.aiModule.toggle();
+                } else {
+                    console.error('AI module not loaded');
+                }
+            });
+        }
+
+        // Update status text in AR view
+        function updateStatusText(message) {
+            const statusEl = document.getElementById('statusText');
+            if (statusEl) {
+                statusEl.setAttribute('value', message);
+            }
+            console.log('📱 Status:', message);
+        }
+
+        // Trigger directional glow (called by audio-direction.js)
+        window.triggerDirectionalGlow = function(direction, intensity = 0.8, duration = 1000) {
+            const leftGlow = document.getElementById('leftGlow');
+            const rightGlow = document.getElementById('rightGlow');
+            
+            if (direction === 'left' && leftGlow) {
+                leftGlow.setAttribute('opacity', intensity);
+                leftGlow.setAttribute('material', `transparent: true; emissive: #FF0000; emissiveIntensity: ${intensity}`);
+                
+                setTimeout(() => {
+                    leftGlow.setAttribute('opacity', 0);
+                    leftGlow.setAttribute('material', 'transparent: true; emissive: #FF0000; emissiveIntensity: 0');
+                }, duration);
+                
+                console.log('🔴 Left directional glow activated');
+            } else if (direction === 'right' && rightGlow) {
+                rightGlow.setAttribute('opacity', intensity);
+                rightGlow.setAttribute('material', `transparent: true; emissive: #00FF00; emissiveIntensity: ${intensity}`);
+                
+                setTimeout(() => {
+                    rightGlow.setAttribute('opacity', 0);
+                    rightGlow.setAttribute('material', 'transparent: true; emissive: #00FF00; emissiveIntensity: 0');
+                }, duration);
+                
+                console.log('🟢 Right directional glow activated');
+            }
+        };
+
+        // Update captions (called by speech-recognition.js)
+        window.updateCaption = function(text) {
+            const captionText = document.getElementById('captionText');
+            const captionBg = document.getElementById('captionBg');
+            
+            if (captionText && captionBg) {
+                if (text.trim()) {
+                    captionText.setAttribute('value', text);
+                    captionText.setAttribute('visible', true);
+                    captionBg.setAttribute('visible', true);
+                } else {
+                    captionText.setAttribute('visible', false);
+                    captionBg.setAttribute('visible', false);
+                }
+                
+                console.log('💬 Caption updated:', text);
+            }
+        };
+
+        // Update topic (called by ai-summarizer.js)
+        window.updateTopic = function(topic) {
+            const topicContent = document.getElementById('topicContent');
+            const topicTitle = document.getElementById('topicTitle');
+            const topicBg = document.getElementById('topicBg');
+            
+            if (topicContent && topicTitle && topicBg) {
+                if (topic.trim()) {
+                    topicContent.setAttribute('value', topic);
+                    topicContent.setAttribute('visible', true);
+                    topicTitle.setAttribute('visible', true);
+                    topicBg.setAttribute('visible', true);
+                } else {
+                    topicContent.setAttribute('visible', false);
+                    topicTitle.setAttribute('visible', false);
+                    topicBg.setAttribute('visible', false);
+                }
+                
+                console.log('🤖 Topic updated:', topic);
+            }
+        };
+
+        // Global error handling for AR
+        window.addEventListener('error', function(e) {
+            console.error('ClearPath AR Error:', e.error);
+            updateStatusText('Error: ' + e.error.message);
+        });
+
+        // XR session management
+        if (navigator.xr) {
+            navigator.xr.isSessionSupported('immersive-ar').then(function(supported) {
+                if (supported) {
+                    console.log('✅ WebXR AR supported');
+                    updateStatusText('ClearPath Ready - WebXR AR Available');
+                } else {
+                    console.warn('⚠️ WebXR AR not supported');
+                    updateStatusText('Warning: WebXR AR not supported on this device');
+                }
+            });
+        } else {
+            console.warn('⚠️ WebXR not available');
+            updateStatusText('Warning: WebXR not available - use Meta Quest 3 browser');
+        }
+    </script>
+</body>
+</html>
